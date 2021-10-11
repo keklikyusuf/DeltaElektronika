@@ -1,0 +1,1 @@
+# DeltaElektronikaSMK15K

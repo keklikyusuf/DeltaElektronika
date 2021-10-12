@@ -1,0 +1,77 @@
+C:\Users\yusuf.keklik\AppData\Local\Programs\Python\Python39\python.exe "C:/Diverse Yusuf Software/Python Packages/Delta Elektronika Power Supply/DeltaElektronikaNew.py"
+b'SYSTem:COMmunicate:WATchdog STOP\n' has been sent to Delta!
+b'SYSTem:LIMits:VOLtage 30,ON\n' has been sent to Delta!
+b'SYSTem:LIMits:CURrent 100,ON\n' has been sent to Delta!
+b'SYSTem:LIMits:POWer 3000,ON\n' has been sent to Delta!
+b'SOURce:VOLtage 24\n' has been sent to Delta!
+24.0000 has been received from Delta!
+b'SOURce:CURrent 50\n' has been sent to Delta!
+50.0000 has been received from Delta!
+b'SOURce:POWer 2000\n' has been sent to Delta!
+2000 has been received from Delta!
+b'OUTPut 1\n' has been sent to Delta!
+1 has been received from Delta!
+Watchdog thread has been started!
+Datalogger thread class has been started!
+b'MEASure:INStrument AH,STATE,ON\n' has been sent to Delta!
+b'SYSTem:COMmunicate:WATchdog SET,3000\n' has been sent to Delta!Datalogger thread class is running!
+
+Watchdog thread is running!
+3.9458 has been received from Delta!
+49.8682 has been received from Delta!
+208.91 has been received from Delta!
+0.0000e+00 has been received from Delta!
+0.0 has been received from Delta!
+0.000 has been received from Delta!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+Datalogger thread class is running!
+23.9991 has been received from Delta!
+48.7393 has been received from Delta!
+1177.78 has been received from Delta!
+7.0183e-02 has been received from Delta!
+5.1 has been received from Delta!
+0.001 has been received from Delta!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+--------------------------------------------------
+Main Operion is running now!
+Watchdog runs every 2 seconds
+Datalogger runs every 5 seconds
+--------------------------------------------------
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+Datalogger thread class is running!
+23.9991 has been received from Delta!
+48.5594 has been received from Delta!
+1172.78 has been received from Delta!
+1.3898e-01 has been received from Delta!
+10.2 has been received from Delta!
+0.003 has been received from Delta!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+Datalogger thread class is running!
+23.9991 has been received from Delta!
+48.5103 has been received from Delta!
+1171.53 has been received from Delta!
+2.0770e-01 has been received from Delta!
+15.3 has been received from Delta!
+0.004 has been received from Delta!
+3000 has been received from Delta!
+Watchdog is still active!
+Watchdog thread is running!
+
+Process finished with exit code -1

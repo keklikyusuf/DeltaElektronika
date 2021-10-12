@@ -13,12 +13,79 @@ import threading
 import time
 import csv
 import datetime
+import sys
 
 """ Module to handle communication with DELTA POWER SUPPLY  """
 
 __version__ = "0.0.1"  # semVersion (Major.Minor.Revision)
 
 IPV4 = "169.254.100.243"
+
+
+class ColorPrinter:
+
+    purple = '\033[95m'
+    blue = '\033[94m'
+    cyan = '\033[96m'
+    green = '\033[92m'
+    yellow = '\033[93m'
+    red = '\033[91m'
+    normal = '\033[0m'
+
+    def __init__(self):
+        """
+        :param color: Enter desired color that has been alredy defined at BColors class!
+        Funtional printing object is being created. For seperation spacer can be changed according to wishes.
+        """
+        self.spacer = '------------------------------------------------------------------------------------'
+
+    def printError(self, message):
+        """
+        :param message: Text message that wanted to be printed
+        :return: This function returns to printed text message
+        Any message is being printed with defined stamp to create functional colorful printing
+        """
+        sys.stdout.write(ColorPrinter.red)
+        now = datetime.datetime.now()
+        text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
+        print(text)
+        return text
+
+    def printFeedback(self, message):
+        """
+        :param message: Text message that wanted to be printed
+        :return: This function returns to printed text message
+        Any message is being printed with defined stamp to create functional colorful printing
+        """
+        sys.stdout.write(ColorPrinter.green)
+        now = datetime.datetime.now()
+        text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
+        print(text)
+        return text
+
+    def printComment(self, message):
+        """
+        :param message: Text message that wanted to be printed
+        :return: This function returns to printed text message
+        Any message is being printed with defined stamp to create functional colorful printing
+        """
+        sys.stdout.write(ColorPrinter.blue)
+        now = datetime.datetime.now()
+        text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
+        print(text)
+        return text
+
+    def printNormal(self, message):
+        """
+        :param message: Text message that wanted to be printed
+        :return: This function returns to printed text message
+        Any message is being printed with defined stamp to create functional colorful printing
+        """
+        sys.stdout.write(ColorPrinter.normal)
+        now = datetime.datetime.now()
+        text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
+        print(text)
+        return text
 
 
 class Communication:
@@ -56,7 +123,7 @@ class Communication:
         communication.connect((self.IPV4, Communication.port_name))
         communication.send(send_message)
         communication.close()
-        print(f'{send_message} has been sent to Delta!')
+        ColorPrinter.printFeedback(f'{send_message} has been sent to Delta!')
         return send_message
 
     def sendReceiveMessage(self, message):
@@ -71,7 +138,7 @@ class Communication:
         communication_message = communication.recv(Communication.buffer_size).decode('UTF-8')
         communication.close()
         received_message = communication_message.rstrip('\n')
-        print(f'{received_message} has been received from Delta!')
+        ColorPrinter.printFeedback(f'{received_message} has been received from Delta!')
         return received_message
 
     def sendMessageWithountPrint(self, message):
@@ -137,18 +204,14 @@ class GeneralInstructions(Communication):
         return self.sendMessage(RST)
 
     def TestGeneralInstructions(self):
-        print("Self Identification runs:")
+        ColorPrinter.printComment("Self Identification runs:")
         self.Identification()
-        print("----------------------------------")
-        print("Protected user data runs:")
+        ColorPrinter.printComment("Protected user data runs:")
         self.ProtectedUserData()
-        print("----------------------------------")
-        print("Clear Error Queue runs:")
+        ColorPrinter.printComment("Clear Error Queue runs:")
         self.ClearErrorQueue()
-        print("----------------------------------")
-        print("Reset Defined State runs:")
+        ColorPrinter.printComment("Reset Defined State runs:")
         self.ResetDefinedState()
-        print("----------------------------------")
         return None
 
 
@@ -263,60 +326,42 @@ class SourceSubsystem(Communication):
         return self.sendReceiveMessage(PowerStepSize)
 
     def TestSourceSubsystem(self):
-        print("Maximum Voltage runs:")
+        ColorPrinter.printComment("Maximum Voltage runs:")
         self.MaximumVoltage()
-        print("----------------------------------")
-        print("Maximum Current runs:")
+        ColorPrinter.printComment("Maximum Current runs:")
         self.MaximumCurrent()
-        print("----------------------------------")
-        print("Maximum Negative Current runs:")
+        ColorPrinter.printComment("Maximum Negative Current runs:")
         self.MaximumNegativeCurrent()
-        print("----------------------------------")
-        print("Maximum Power runs:")
+        ColorPrinter.printComment("Maximum Power runs:")
         self.MaximumPower()
-        print("----------------------------------")
-        print("Maximum Negative Power runs:")
+        ColorPrinter.printComment("Maximum Negative Power runs:")
         self.MaximumNegativePower()
-        print("----------------------------------")
-        print("Set Voltage runs:")
+        ColorPrinter.printComment("Set Voltage runs:")
         self.SetVoltage(5)
-        print("----------------------------------")
-        print("Read Last Voltage Set runs:")
+        ColorPrinter.printComment("Read Last Voltage Set runs:")
         self.ReadVoltageSet()
-        print("----------------------------------")
-        print("Set Current runs:")
+        ColorPrinter.printComment("Set Current runs:")
         self.SetCurrent(5)
-        print("----------------------------------")
-        print("Read Last Current Set runs:")
+        ColorPrinter.printComment("Read Last Current Set runs:")
         self.ReadCurrentSet()
-        print("----------------------------------")
-        print("Set Negative Current Set runs:")
+        ColorPrinter.printComment("Set Negative Current Set runs:")
         self.SetNegativeCurrent(-5)
-        print("----------------------------------")
-        print("Read Last Negative Current Set runs:")
+        ColorPrinter.printComment("Read Last Negative Current Set runs:")
         self.ReadNegativeCurrentSet()
-        print("----------------------------------")
-        print("Set Power Set runs:")
+        ColorPrinter.printComment("Set Power Set runs:")
         self.SetPower(100)
-        print("----------------------------------")
-        print("Read Last Power Set runs:")
+        ColorPrinter.printComment("Read Last Power Set runs:")
         self.ReadPowerSet()
-        print("----------------------------------")
-        print("Set Negative Power Set runs:")
+        ColorPrinter.printComment("Set Negative Power Set runs:")
         self.SetNegativePower(-100)
-        print("----------------------------------")
-        print("Read Last Negative Power Set runs:")
+        ColorPrinter.printComment("Read Last Negative Power Set runs:")
         self.ReadNegativePowerSet()
-        print("----------------------------------")
-        print("Read Voltage Stepsize runs:")
+        ColorPrinter.printComment("Read Voltage Stepsize runs:")
         self.VoltageStepSize()
-        print("----------------------------------")
-        print("Read Current Stepsize runs:")
+        ColorPrinter.printComment("Read Current Stepsize runs:")
         self.CurrentStepSize()
-        print("----------------------------------")
-        print("Read Power Stepsize runs:")
+        ColorPrinter.printComment("Read Power Stepsize runs:")
         self.PowerStepSize()
-        print("----------------------------------")
 
 
 class MeasureSubsystem(Communication):
@@ -475,76 +520,53 @@ class MeasureSubsystem(Communication):
         return self.sendReceiveMessage(MeasureTemperature)
 
     def TestMeasureSubsystem(self):
-        print("Measure voltage runs:")
+        ColorPrinter.printComment("Measure voltage runs:")
         self.MeasureVoltage()
-        print("----------------------------------")
-        print("Measure current runs:")
+        ColorPrinter.printComment("Measure current runs:")
         self.MeasureCurrent()
-        print("----------------------------------")
-        print("Measure power runs:")
+        ColorPrinter.printComment("Measure power runs:")
         self.MeasurePower()
-        print("----------------------------------")
-        print("Set Ah Measurement State runs:")
+        ColorPrinter.printComment("Set Ah Measurement State runs:")
         self.SetAhMeasurementState('ON')
-        print("----------------------------------")
-        print("Read Ah Measurement State runs:")
+        ColorPrinter.printComment("Read Ah Measurement State runs:")
         self.ReadAhMeasurementSetState()
-        print("----------------------------------")
-        print("Read Ah Time Hours runs:")
+        ColorPrinter.printComment("Read Ah Time Hours runs:")
         self.ReadAhMeasurementTimeHours()
-        print("----------------------------------")
-        print("Read Ah Time Seconds runs:")
+        ColorPrinter.printComment("Read Ah Time Seconds runs:")
         self.ReadAhMeasurementTimeSeconds()
-        print("----------------------------------")
-        print("Measure Ah Positive runs:")
+        ColorPrinter.printComment("Measure Ah Positive runs:")
         self.MeasureAhPositiveTotal()
-        print("----------------------------------")
-        print("Measure Ah Negative runs:")
+        ColorPrinter.printComment("Measure Ah Negative runs:")
         self.MeasureAhNegativeTotal()
-        print("----------------------------------")
-        print("Measure Ah Minimum Current runs:")
+        ColorPrinter.printComment("Measure Ah Minimum Current runs:")
         self.MeasureAhMinimumCurrent()
-        print("----------------------------------")
-        print("Measure Ah Maximum Current runs:")
+        ColorPrinter.printComment("Measure Ah Maximum Current runs:")
         self.MeasureAhMaximumCurrent()
-        print("----------------------------------")
-        print("Measure Ah Minimum Negative Current runs:")
+        ColorPrinter.printComment("Measure Ah Minimum Negative Current runs:")
         self.MeasureAhMinimumNegativeCurrent()
-        print("----------------------------------")
-        print("Measure Ah Maximum Negarive Current runs:")
+        ColorPrinter.printComment("Measure Ah Maximum Negarive Current runs:")
         self.MeasureAhMinimumNegativeCurrent()
-        print("----------------------------------")
-        print("Set Wh Measurement State runs:")
+        ColorPrinter.printComment("Set Wh Measurement State runs:")
         self.SetWhMeasurementState('ON')
-        print("----------------------------------")
-        print("Read Wh Measurement State runs:")
+        ColorPrinter.printComment("Read Wh Measurement State runs:")
         self.ReadWhMeasurementSetState()
-        print("----------------------------------")
-        print("Read Wh Time Hours runs:")
+        ColorPrinter.printComment("Read Wh Time Hours runs:")
         self.ReadAhMeasurementTimeHours()
-        print("----------------------------------")
-        print("Read Wh Time Seconds runs:")
+        ColorPrinter.printComment("Read Wh Time Seconds runs:")
         self.ReadWhMeasurementTimeSeconds()
-        print("----------------------------------")
-        print("Measure Wh Positive runs:")
+        ColorPrinter.printComment("Measure Wh Positive runs:")
         self.MeasureWhPositiveTotal()
-        print("----------------------------------")
-        print("Measure Wh Negative runs:")
+        ColorPrinter.printComment("Measure Wh Negative runs:")
         self.MeasureWhNegativeTotal()
-        print("----------------------------------")
-        print("Measure Wh Minimum Current runs:")
+        ColorPrinter.printComment("Measure Wh Minimum Current runs:")
         self.MeasureWhMinimumCurrent()
-        print("----------------------------------")
-        print("Measure Wh Maximum Current runs:")
+        ColorPrinter.printComment("Measure Wh Maximum Current runs:")
         self.MeasureWhMaximumCurrent()
-        print("----------------------------------")
-        print("Measure Wh Minimum Negative Current runs:")
+        ColorPrinter.printComment("Measure Wh Minimum Negative Current runs:")
         self.MeasureWhMinimumNegativeCurrent()
-        print("----------------------------------")
-        print("Measure Wh Maximum Negarive Current runs:")
+        ColorPrinter.printComment("Measure Wh Maximum Negarive Current runs:")
         self.MeasureWhMaximumNegativeCurrent()
-        print("----------------------------------")
-        print("Measure Temperature runs:")
+        ColorPrinter.printComment("Measure Temperature runs:")
         self.MeasureTemperature()
 
 
@@ -736,104 +758,76 @@ class SystemSubsystem(Communication):
         return self.sendMessage(TestWatchdog)
 
     def TestSystemSubsystem(self):
-        print("Remote Shut Down Set runs:")
+        ColorPrinter.printComment("Remote Shut Down Set runs:")
         self.SetRemoteShutDown('OFF')
-        print("----------------------------------")
-        print("Read Remote Shut Down Set runs:")
+        ColorPrinter.printComment("Read Remote Shut Down Set runs:")
         self.ReadRemoteShutDownSet()
-        print("----------------------------------")
-        print("Set Voltage Limit runs:")
+        ColorPrinter.printComment("Set Voltage Limit runs:")
         self.SetVoltageLimit('16.5', 'ON')
-        print("----------------------------------")
-        print("Read Voltage Limit Set runs:")
+        ColorPrinter.printComment("Read Voltage Limit Set runs:")
         self.ReadVoltageLimitSet()
-        print("----------------------------------")
-        print("Set Current Limit runs:")
+        ColorPrinter.printComment("Set Current Limit runs:")
         self.SetCurrentLimit('50', 'ON')
-        print("----------------------------------")
-        print("Read Current Limit Set runs:")
+        ColorPrinter.printComment("Read Current Limit Set runs:")
         self.ReadCurrentLimitSet()
-        print("----------------------------------")
-        print("Set Negative Current Limit runs:")
+        ColorPrinter.printComment("Set Negative Current Limit runs:")
         self.SetNegativeCurrentLimit('-50', 'ON')
-        print("----------------------------------")
-        print("Read Negative Current Limit Set runs:")
+        ColorPrinter.printComment("Read Negative Current Limit Set runs:")
         self.ReadNegativeCurrentLimitSet()
-        print("----------------------------------")
-        print("Set Power Limit runs:")
+        ColorPrinter.printComment("Set Power Limit runs:")
         self.SetPowerLimit('100', 'ON')
-        print("----------------------------------")
-        print("Read Power Limit Set runs:")
+        ColorPrinter.printComment("Read Power Limit Set runs:")
         self.ReadPowerLimitSet()
-        print("----------------------------------")
-        print("Set Negative Power Limit runs:")
+        ColorPrinter.printComment("Set Negative Power Limit runs:")
         self.SetNegativePowerLimit('-100', 'ON')
-        print("----------------------------------")
-        print("Read Negative Power Limit Set runs:")
+        ColorPrinter.printComment("Read Negative Power Limit Set runs:")
         self.ReadNegativePowerLimitSet()
-        print("----------------------------------")
-        print("Highlight Frontpanel Set runs:")
+        ColorPrinter.printComment("Highlight Frontpanel Set runs:")
         self.HighlightFrontpanel()
-        print("----------------------------------")
-        print("Set Lock Frontpanel runs:")
+        ColorPrinter.printComment("Set Lock Frontpanel runs:")
         self.LockFrontPanel('ON')
-        print("----------------------------------")
-        print("Read Lock Frontpanel Set runs:")
+        ColorPrinter.printComment("Read Lock Frontpanel Set runs:")
         self.ReadLockFrontpanelSet()
-        print("----------------------------------")
-        print("Set Lock Control Frontpanel runs:")
+        ColorPrinter.printComment("Set Lock Control Frontpanel runs:")
         self.LockControlFrontpanel('ON')
-        print("----------------------------------")
-        print("Read Lock Control Frontpanel Set runs:")
+        ColorPrinter.printComment("Read Lock Control Frontpanel Set runs:")
         self.ReadLockControlFrontpanelSet()
-        print("----------------------------------")
-        print("Time Set runs:")
+        ColorPrinter.printComment("Time Set runs:")
         self.SetTime('9', '10', '0')
-        print("----------------------------------")
-        print("Read Time Set runs:")
+        ColorPrinter.printComment("Read Time Set runs:")
         self.ReadTimeSet()
-        print("----------------------------------")
-        print("Date Set runs:")
+        ColorPrinter.printComment("Date Set runs:")
         self.SetDate('2021', '9', '8')
-        print("----------------------------------")
-        print("Read Date Set runs:")
+        ColorPrinter.printComment("Read Date Set runs:")
         self.ReadDateSet()
-        print("----------------------------------")
-        print("Read Errors runs:")
+        ColorPrinter.printComment("Read Errors runs:")
         self.ReadErrors()
-        print("----------------------------------")
-        print("Read Warnings runs:")
+        ColorPrinter.printComment("Read Warnings runs:")
         self.ReadWarnings()
-        print("----------------------------------")
-        print("Set Watchdog runs:")
+        ColorPrinter.printComment("Set Watchdog runs:")
         self.SetWatchdog("500")
-        print("----------------------------------")
-        print("Read Watchdog Set runs:")
+        ColorPrinter.printComment("Read Watchdog Set runs:")
         self.ReadWatchdogSet()
-        print("----------------------------------")
-        print("Read Current Watchdog State runs:")
+        ColorPrinter.printComment("Read Current Watchdog State runs:")
         self.ReadCurrentWatchdogState()
-        print("----------------------------------")
-        print("Disable Watchdog runs:")
+        ColorPrinter.printComment("Disable Watchdog runs:")
         self.DisableWatchdog()
-        print("----------------------------------")
-        print("Test Watchdog runs:")
+        ColorPrinter.printComment("Test Watchdog runs:")
         self.TestWatchdog()
 
 
 class OutputSubsystem(Communication):
-    # TODO Finilie output subsystem and add test method for total testing!
     """
-        Manual: Output Subsystem - page 17 - Queries and Commands
-        -----------------------------------------------------------------------------------------------------------------
-        SetOutput = "OUTPut<sp><boolean><term>" To switch power supply on/off - boolean = 0, 1, OFF, ON
-        -----------------------------------------------------------------------------------------------------------------
-        ReadOutputSet = "OUTPut?<term> To read the last stage of the output
-        -----------------------------------------------------------------------------------------------------------------
-        Note: All commands can be tested with 'TestOutputSubsystem Method'
-        :return Queries will return the Received Message!
-        :return Commands will return the Command has been sent!
-        """
+    Manual: Output Subsystem - page 17 - Queries and Commands
+    -----------------------------------------------------------------------------------------------------------------
+    SetOutput = "OUTPut<sp><boolean><term>" To switch power supply on/off - boolean = 0, 1, OFF, ON
+    -----------------------------------------------------------------------------------------------------------------
+    ReadOutputSet = "OUTPut?<term> To read the last stage of the output
+    -----------------------------------------------------------------------------------------------------------------
+    Note: All commands can be tested with 'TestOutputSubsystem Method'
+    :return Queries will return the Received Message!
+    :return Commands will return the Command has been sent!
+    """
 
     def __init__(self, IPV4):
         super().__init__(IPV4)
@@ -849,35 +843,29 @@ class OutputSubsystem(Communication):
         return self.sendReceiveMessage(ReadOutputSet)
 
     def TestOutputSubsystem(self):
-        print("Output State Set runs:")
+        ColorPrinter.printComment("Output State Set runs:")
         self.SetOutput('1')
-        print("----------------------------------")
-        print("Read output state ")
+        ColorPrinter.printComment("Read output state ")
         self.ReadOutputSet()
-        print("----------------------------------")
-        print("Output State Set runs:")
+        ColorPrinter.printComment("Output State Set runs:")
         self.SetOutput('0')
-        print("----------------------------------")
-        print("Read output state ")
+        ColorPrinter.printComment("Read output state ")
         self.ReadOutputSet()
-        print("----------------------------------")
 
 
-# TODO Create a watchdog opreation class as a Thread
 class WatchdogOperation(threading.Thread):
     """
-            This is a created thread for Watchdog Operation
-            -----------------------------------------------------------------------------------------------------------------
-            Timer: It is the set point for the watchdog operation, if watchdog time cannot be triggered withing this
-            time period, it will switch of the output of the delta for safety.
-            -----------------------------------------------------------------------------------------------------------------
-            Sleeptime: This thread operates at given time period and sleeps at that timeline for the rest of the main
-            operation.
-            -----------------------------------------------------------------------------------------------------------------
-            Be careful while setting it that timer is higher than sleep time for proper operation.
-            -----------------------------------------------------------------------------------------------------------------
-            If device fails with watch operation, it must be resetted manualy for safety reasons.
-            """
+        This is a created thread for Watchdog Operation
+        -----------------------------------------------------------------------------------------------------------------
+        Timer: It is the set point for the watchdog operation, if watchdog time cannot be triggered withing this time
+        period, it will switch of the output of the delta for safety.
+        -----------------------------------------------------------------------------------------------------------------
+        Sleeptime: This thread operates at given time period and sleeps at that timeline for the rest of the main operation.
+        -----------------------------------------------------------------------------------------------------------------
+        Be careful while setting it that timer is higher than sleep time for proper operation.
+        -----------------------------------------------------------------------------------------------------------------
+        If device fails with watch operation, it must be resetted manualy for safety reasons.
+    """
 
     def __init__(self, timer, sleeptime, deamonState=True):
         super().__init__()
@@ -891,25 +879,24 @@ class WatchdogOperation(threading.Thread):
         return f'This is created to have watchdog operation for Delta Power Supply'
 
     def stop(self):
-        print("Stop watchdog thread has been called!")
+        ColorPrinter.printFeedback("Stop watchdog thread has been called!")
         return self._stop_event.set()
 
     def run(self):
-        print("Watchdog thread has been started!")
+        ColorPrinter.printFeedback("Watchdog thread has been started!")
         SystemSubsystem(IPV4).SetWatchdog(self.timer)
         while not self._stop_event.is_set():
-            print("Watchdog thread is running!")
+            ColorPrinter.printFeedback("Watchdog thread is running!")
             time.sleep(self.sleeptime)
             if float(SystemSubsystem(IPV4).ReadWatchdogSet()) != 0:
-                print('Watchdog is still active!')
+                ColorPrinter.printFeedback('Watchdog is still active!')
             else:
-                print('Watchdog has been failed!')
+                ColorPrinter.printFeedback('Watchdog has been failed!')
                 self.stop()
-        print("Watchdog thread has been stopped!")
+        ColorPrinter.printFeedback("Watchdog thread has been stopped!")
 
 
 # TODO Add datalogger class as Thread
-
 class DataloggerOperation(threading.Thread):
     """
     It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
@@ -950,82 +937,55 @@ class DataloggerOperation(threading.Thread):
         return self.dataFrame
 
     def stop(self):
-        print('Datalogger stop event has been started!')
+        ColorPrinter.printFeedback('Datalogger stop event has been started!')
         self._stop_event.set()
 
     def run(self):
-        print('Datalogger thread class has been started!')
+        ColorPrinter.printFeedback('Datalogger thread class has been started!')
         MeasureSubsystem(IPV4).SetAhMeasurementState('ON')
         while not self._stop_event.is_set():
-            print('Datalogger thread class is running!')
+            ColorPrinter.printFeedback('Datalogger thread class is running!')
             self.csvLogger()
             self.updateDataFrame()
             time.sleep(self.loggingTime)
-        print('Datalogger thread class has been stopped!')
+        ColorPrinter.printFeedback('Datalogger thread class has been stopped!')
 
 
 # TODO Add shutdown class
 # TODO Add battery charging class as Thread
 
-def TestAll():
-    print('Test all function is running!')
-    print('****************************************************************************************')
-    print("System runs to test!")
-    print("------------------------------------------------------------------------------------")
-    print("General Instructions run to test!")
+def TestAll(cprint):
+    cprint.printComment('Test all function is running!')
+    cprint.printComment("System runs to test!")
+    cprint.printComment("General Instructions run to test!")
     GeneralComments = GeneralInstructions(IPV4)
-    print(GeneralComments.__doc__)
-    GeneralComments.TestGeneralInstructions()
-    print("------------------------------------------------------------------------------------")
-    print("Source Subsystem run to test!")
+    cprint.printComment(GeneralComments.__doc__)
+    #GeneralComments.TestGeneralInstructions()
+    cprint.printComment("Source Subsystem run to test!")
     SourceComments = SourceSubsystem(IPV4)
-    print(SourceComments.__doc__)
-    SourceComments.TestSourceSubsystem()
-    print("------------------------------------------------------------------------------------")
-    print("Source Subsystem run to test!")
+    cprint.printComment(SourceComments.__doc__)
+    #SourceComments.TestSourceSubsystem()
+    cprint.printComment("Source Subsystem run to test!")
     MeasureComments = MeasureSubsystem(IPV4)
-    print(MeasureComments.__doc__)
-    MeasureComments.TestMeasureSubsystem()
-    print("------------------------------------------------------------------------------------")
-    print("System Subsystem run to test!")
+    cprint.printComment(MeasureComments.__doc__)
+    #MeasureComments.TestMeasureSubsystem()
+    cprint.printComment("System Subsystem run to test!")
     SystemComments = SystemSubsystem(IPV4)
-    print(SystemComments.__doc__)
-    SystemComments.TestSystemSubsystem()
-    print("------------------------------------------------------------------------------------")
-    print("Output Subsystem run to test!")
+    cprint.printComment(SystemComments.__doc__)
+    #SystemComments.TestSystemSubsystem()
+    cprint.printComment("Output Subsystem run to test!")
     OutputComments = OutputSubsystem(IPV4)
-    print(OutputComments.__doc__)
-    OutputComments.TestOutputSubsystem()
-    print("------------------------------------------------------------------------------------")
-    print('Test all function is done!')
-    print('****************************************************************************************')
+    cprint.printComment(OutputComments.__doc__)
+    #OutputComments.TestOutputSubsystem()
+    cprint.printComment('Test all function is done!')
 
 
 if __name__ == '__main__':
-    OutputComments = OutputSubsystem(IPV4)
-    SystemComments = SystemSubsystem(IPV4)
-    SystemComments.DisableWatchdog()
-    SourceComments = SourceSubsystem(IPV4)
-    SystemComments.SetVoltageLimit(30, 'ON')
-    SystemComments.SetCurrentLimit(100, 'ON')
-    SystemComments.SetPowerLimit(3000, 'ON')
-    SourceComments.SetVoltage(24)
-    SourceComments.ReadVoltageSet()
-    SourceComments.SetCurrent('50')
-    SourceComments.ReadCurrentSet()
-    SourceComments.SetPower('2000')
-    SourceComments.ReadPowerSet()
-    OutputComments.SetOutput('1')
-    OutputComments.ReadOutputSet()
-    WatchdogSet = WatchdogOperation('3000', 2)
-    WatchdogSet.start()
-    Datalogger = DataloggerOperation(5)
-    Datalogger.start()
-    # TestAll()
+    cprint = ColorPrinter()
+    TestAll(cprint)
     while True:
-        time.sleep(10)
-        print('--------------------------------------------------')
-        print('Main Operion is running now!')
-        print('Watchdog runs every 2 seconds')
-        print('Datalogger runs every 5 seconds')
-        print('--------------------------------------------------')
+        time.sleep(5)
+        cprint.printError('This is an Error Message!')
+        cprint.printFeedback('Main Operion is running now!')
+        cprint.printComment('Watchdog runs every 2 seconds')
+        cprint.printNormal('Datalogger runs every 5 seconds')

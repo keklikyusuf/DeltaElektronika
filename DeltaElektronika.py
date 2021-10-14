@@ -915,25 +915,26 @@ class BasicDataloggerOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
-        self.finalName = f'{DataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        self.finalName = f'{BasicDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
-        self.dataFrame = DataloggerBasicOperation.dataFrameBasic.insert(0, 'Timestamp')
+        BasicDataloggerOperation.dataFrameBasic.insert(0, 'Timestamp')
+
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
         write = csv.writer(csvFile)
-        write.writerow(self.dataFrame)
+        write.writerow(BasicDataloggerOperation.dataFrameBasic)
         csvFile.close()
-        self.dataFrame[0] = time.strftime('%d-%m-%Y %H:%M:%S')
-        return self.dataFrame
+        BasicDataloggerOperation.dataFrameBasic[0] = time.strftime('%d-%m-%Y %H:%M:%S')
+        return BasicDataloggerOperation.dataFrameBasic
 
     def updateBasicDataFrame(self):
-        self.dataFrame[1] = MeasureSubsystem(IPV4).MeasureVoltage()
-        self.dataFrame[2] = MeasureSubsystem(IPV4).MeasureCurrent()
-        self.dataFrame[3] = MeasureSubsystem(IPV4).MeasurePower()
+        BasicDataloggerOperation.dataFrameBasic[1] = MeasureSubsystem(IPV4).MeasureVoltage()
+        BasicDataloggerOperation.dataFrameBasic[2] = MeasureSubsystem(IPV4).MeasureCurrent()
+        BasicDataloggerOperation.dataFrameBasic[3] = MeasureSubsystem(IPV4).MeasurePower()
         cprint.printFeedback(
-            f'Voltage: {self.dataFrame[1]}V, Current: {self.dataFrame[2]}A, Power: {self.dataFrame[3]}W')
-        return self.dataFrame
+            f'Voltage: {BasicDataloggerOperation.dataFrameBasic[1]}V, Current: {BasicDataloggerOperation.dataFrameBasic[2]}A, Power: {BasicDataloggerOperation.dataFrameBasic[3]}W')
+        return BasicDataloggerOperation.dataFrameBasic
 
     def stop(self):
         cprint.printFeedback('Datalogger stop event has been started!')
@@ -967,29 +968,30 @@ class AhDataloggerOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
-        self.finalName = f'{DataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        self.finalName = f'{AhDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
-        self.dataFrame = AhDataloggerOperation.dataFrameAh.insert(0, 'Timestamp')
+        AhDataloggerOperation.dataFrameAh.insert(0, 'Timestamp')
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
         write = csv.writer(csvFile)
-        write.writerow(self.dataFrame)
+        write.writerow(AhDataloggerOperation.dataFrameAh)
         csvFile.close()
-        self.dataFrame[0] = time.strftime('%d-%m-%Y %H:%M:%S')
-        return self.dataFrame
+        AhDataloggerOperation.dataFrameAh[0] = time.strftime('%d-%m-%Y %H:%M:%S')
+        return AhDataloggerOperation.dataFrameAh
 
     def updateAhDataFrame(self):
-        self.dataFrame[1] = MeasureSubsystem(IPV4).MeasureVoltage()
-        self.dataFrame[2] = MeasureSubsystem(IPV4).MeasureCurrent()
-        self.dataFrame[3] = MeasureSubsystem(IPV4).MeasurePower()
-        self.dataFrame[4] = MeasureSubsystem(IPV4).MeasureAhPositiveTotal()
-        self.dataFrame[5] = MeasureSubsystem(IPV4).ReadAhMeasurementTimeSeconds()
-        self.dataFrame[6] = MeasureSubsystem(IPV4).ReadAhMeasurementTimeHours()
+        AhDataloggerOperation.dataFrameAh[1] = MeasureSubsystem(IPV4).MeasureVoltage()
+        AhDataloggerOperation.dataFrameAh[2] = MeasureSubsystem(IPV4).MeasureCurrent()
+        AhDataloggerOperation.dataFrameAh[3] = MeasureSubsystem(IPV4).MeasurePower()
+        AhDataloggerOperation.dataFrameAh[4] = MeasureSubsystem(IPV4).MeasureAhPositiveTotal()
+        AhDataloggerOperation.dataFrameAh[5] = MeasureSubsystem(IPV4).ReadAhMeasurementTimeSeconds()
+        AhDataloggerOperation.dataFrameAh[6] = MeasureSubsystem(IPV4).ReadAhMeasurementTimeHours()
         cprint.printFeedback(
-            f'Voltage: {self.dataFrame[1]}V, Current: {self.dataFrame[2]}A, Power: {self.dataFrame[3]}W, '
-            f'Ah: {self.dataFrame[4]}, AhSeconds: {self.dataFrame[5]}, AhHours: {self.dataFrame[6]}')
-        return self.dataFrame
+            f'Voltage: {AhDataloggerOperation.dataFrameAh[1]}V, Current: {AhDataloggerOperation.dataFrameAh[2]}A, '
+            f'Power: {AhDataloggerOperation.dataFrameAh[3]}W, Ah: {AhDataloggerOperation.dataFrameAh[4]}, '
+            f'AhSeconds: {AhDataloggerOperation.dataFrameAh[5]}, AhHours: {AhDataloggerOperation.dataFrameAh[6]}')
+        return AhDataloggerOperation.dataFrameAh
 
     def stop(self):
         cprint.printFeedback('Datalogger stop event has been started!')
@@ -1001,7 +1003,7 @@ class AhDataloggerOperation(threading.Thread):
         while not self._stop_event.is_set():
             cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
-            self.updateBasicDataFrame()
+            self.updateAhDataFrame()
             time.sleep(self.loggingTime)
         cprint.printFeedback('Datalogger thread class has been stopped!')
 
@@ -1024,29 +1026,30 @@ class WhDataloggerOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
-        self.finalName = f'{DataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        self.finalName = f'{WhDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
-        self.dataFrame = WhDataloggerOperation.dataFrameWh.insert(0, 'Timestamp')
+        WhDataloggerOperation.dataFrameWh.insert(0, 'Timestamp')
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
         write = csv.writer(csvFile)
-        write.writerow(self.dataFrame)
+        write.writerow(WhDataloggerOperation.dataFrameWh)
         csvFile.close()
-        self.dataFrame[0] = time.strftime('%d-%m-%Y %H:%M:%S')
-        return self.dataFrame
+        WhDataloggerOperation.dataFrameWh[0] = time.strftime('%d-%m-%Y %H:%M:%S')
+        return WhDataloggerOperation.dataFrameWh
 
     def updateWhDataFrame(self):
-        self.dataFrame[1] = MeasureSubsystem(IPV4).MeasureVoltage()
-        self.dataFrame[2] = MeasureSubsystem(IPV4).MeasureCurrent()
-        self.dataFrame[3] = MeasureSubsystem(IPV4).MeasurePower()
-        self.dataFrame[4] = MeasureSubsystem(IPV4).MeasureWhPositiveTotal()
-        self.dataFrame[5] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeSeconds()
-        self.dataFrame[6] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeHours()
+        WhDataloggerOperation.dataFrameWh[1] = MeasureSubsystem(IPV4).MeasureVoltage()
+        WhDataloggerOperation.dataFrameWh[2] = MeasureSubsystem(IPV4).MeasureCurrent()
+        WhDataloggerOperation.dataFrameWh[3] = MeasureSubsystem(IPV4).MeasurePower()
+        WhDataloggerOperation.dataFrameWh[4] = MeasureSubsystem(IPV4).MeasureWhPositiveTotal()
+        WhDataloggerOperation.dataFrameWh[5] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeSeconds()
+        WhDataloggerOperation.dataFrameWh[6] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeHours()
         cprint.printFeedback(
-            f'Voltage: {self.dataFrame[1]}V, Current: {self.dataFrame[2]}A, Power: {self.dataFrame[3]}W, '
-            f'Wh: {self.dataFrame[4]}, WhSeconds: {self.dataFrame[5]}, WhHours: {self.dataFrame[6]}')
-        return self.dataFrame
+            f'Voltage: {WhDataloggerOperation.dataFrameWh[1]}V, Current: {WhDataloggerOperation.dataFrameWh[2]}A, '
+            f'Power: {WhDataloggerOperation.dataFrameWh[3]}W, Wh: {WhDataloggerOperation.dataFrameWh[4]}, '
+            f'WhSeconds: {WhDataloggerOperation.dataFrameWh[5]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}')
+        return WhDataloggerOperation.dataFrameWh
 
     def stop(self):
         cprint.printFeedback('Datalogger stop event has been started!')
@@ -1058,7 +1061,7 @@ class WhDataloggerOperation(threading.Thread):
         while not self._stop_event.is_set():
             cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
-            self.updateBasicDataFrame()
+            self.updateWhDataFrame()
             time.sleep(self.loggingTime)
         cprint.printFeedback('Datalogger thread class has been stopped!')
 
@@ -1071,15 +1074,15 @@ class ShutdownOperation:
 
     @staticmethod
     def limitShutdownValues():
-        SystemSubsystem(IPV4).SetVoltageLimit(0)
+        SystemSubsystem(IPV4).SetVoltageLimit(0, 'ON')
         SystemSubsystem(IPV4).ReadVoltageLimitSet()
-        SystemSubsystem(IPV4).SetCurrentLimit(0)
+        SystemSubsystem(IPV4).SetCurrentLimit(0, 'ON')
         SystemSubsystem(IPV4).ReadVoltageLimitSet()
-        SystemSubsystem(IPV4).SetNegativeCurrentLimit(0)
+        SystemSubsystem(IPV4).SetNegativeCurrentLimit(0, 'ON')
         SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
-        SystemSubsystem(IPV4).SetPowerLimit(0)
+        SystemSubsystem(IPV4).SetPowerLimit(0, 'ON')
         SystemSubsystem(IPV4).ReadPowerLimitSet()
-        SystemSubsystem(IPV4).SetNegativePowerLimit(0)
+        SystemSubsystem(IPV4).SetNegativePowerLimit(0, 'ON')
         SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
 
     @staticmethod
@@ -1108,7 +1111,7 @@ class ChargingOperation(threading.Thread):
     It has been created to run charging operation according to users desires!
     """
 
-    def __init__(self, sleeptime, voltageSet, currentSet, cutcurrentSet, deamonState=True):
+    def __init__(self, sleeptime, voltageSet, currentSet, cutoffCurrentSet, deamonState=True):
         """
         :param fileName: Enter desired file name for your log file. -String
         Log file is being created with that time time-stamp and closed as soon as object is being generated!
@@ -1117,19 +1120,19 @@ class ChargingOperation(threading.Thread):
         self.sleeptime = sleeptime
         self.voltageSet = voltageSet
         self.currentSet = currentSet
-        self.cutcurrentSet = cutcurrentSet
+        self.cutCurrentSet = cutoffCurrentSet
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
 
     def chargerInitialize(self):
-        cprint.printFeedback('Charger is being initialized!')
+        cprint.printComment('Charger is being initialized!')
         SystemSubsystem(IPV4).HighlightFrontpanel()
-        SystemSubsystem(IPV4).SetVoltageLimit(self.voltageSet + 0.5)
+        SystemSubsystem(IPV4).SetVoltageLimit(self.voltageSet + 0.5, 'ON')
         SystemSubsystem(IPV4).ReadVoltageLimitSet()
-        SystemSubsystem(IPV4).SetCurrentLimit(self.currentSet + 10)
+        SystemSubsystem(IPV4).SetCurrentLimit(self.currentSet + 10, 'ON')
         SystemSubsystem(IPV4).ReadCurrentLimitSet()
-        SystemSubsystem(IPV4).SetPowerLimit(self.voltageSet * self.currentSet + 100)
+        SystemSubsystem(IPV4).SetPowerLimit(self.voltageSet * self.currentSet + 100, 'ON')
         SystemSubsystem(IPV4).ReadPowerLimitSet()
 
         SourceSubsystem(IPV4).SetVoltage(self.voltageSet)
@@ -1137,6 +1140,7 @@ class ChargingOperation(threading.Thread):
         SourceSubsystem(IPV4).SetCurrent(self.currentSet)
         SourceSubsystem(IPV4).ReadCurrentSet()
         SourceSubsystem(IPV4).SetPower(self.voltageSet * self.currentSet)
+        SourceSubsystem(IPV4).ReadPowerSet()
 
         OutputSubsystem(IPV4).SetOutput(1)
         OutputSubsystem(IPV4).ReadOutputSet()
@@ -1149,14 +1153,14 @@ class ChargingOperation(threading.Thread):
         ShutdownOperation.setShutdownOutput()
 
     def checkChargerState(self):
-        if MeasureSubsystem(IPV4).MeasureVoltage() > self.voltageSet:
+        if float(MeasureSubsystem(IPV4).MeasureVoltage()) > self.voltageSet:
             cprint.printError('Voltage is exceed set point, system will shutdown immediatly')
             ShutdownOperation.limitShutdownValues()
             ShutdownOperation.setShutdownValues()
             ShutdownOperation.setShutdownOutput()
         else:
             cprint.printFeedback('Voltage is still in safe range!')
-        if MeasureSubsystem(IPV4).MeasureCurrent() < self.cutcurrentSet:
+        if float(MeasureSubsystem(IPV4).MeasureCurrent()) < self.cutCurrentSet:
             cprint.printFeedback('Charging current is lower than cut off current charging is being finalized!')
             self.stop()
         else:
@@ -1171,13 +1175,86 @@ class ChargingOperation(threading.Thread):
         self.chargerInitialize()
         while not self._stop_event.is_set():
             cprint.printFeedback('Charger thread class is running!')
-            self.checkChargerState()
             time.sleep(self.sleeptime)
+            self.checkChargerState()
         self.chargerFinalize()
         cprint.printFeedback('Charger thread class has been stopped!')
 
 
 # TODO Add battery discharging class as Thread
+class DischargingOperation(threading.Thread):
+    """
+    It has been created to run discharging operation according to users desires!
+    """
+
+    def __init__(self, sleeptime, voltageSet, currentSet, cutoffCurrentSet, deamonState=True):
+        """
+        :param fileName: Enter desired file name for your log file. -String
+        Log file is being created with that time time-stamp and closed as soon as object is being generated!
+        """
+        super().__init__()
+        self.sleeptime = sleeptime
+        self.voltageSet = voltageSet
+        self.currentSet = currentSet
+        self.cutoffCurrentSet = cutoffCurrentSet
+        self.deamonState = deamonState
+        self.setDaemon(self.deamonState)
+        self._stop_event = threading.Event()
+
+    def dischargerInitialize(self):
+        cprint.printComment('Discharger is being initialized!')
+        SystemSubsystem(IPV4).HighlightFrontpanel()
+        SystemSubsystem(IPV4).SetVoltageLimit(self.voltageSet - 0.5, 'ON')
+        SystemSubsystem(IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(IPV4).SetNegativeCurrentLimit(self.currentSet - 10, 'ON')
+        SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
+        SystemSubsystem(IPV4).SetNegativePowerLimit(self.voltageSet * self.currentSet - 100, 'ON')
+        SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
+
+        SourceSubsystem(IPV4).SetVoltage(self.voltageSet)
+        SourceSubsystem(IPV4).ReadVoltageSet()
+        SourceSubsystem(IPV4).SetNegativeCurrent(self.currentSet)
+        SourceSubsystem(IPV4).ReadCurrentSet()
+        SourceSubsystem(IPV4).SetNegativePower(self.voltageSet * self.currentSet)
+        SourceSubsystem(IPV4).ReadPowerSet()
+
+        OutputSubsystem(IPV4).SetOutput(1)
+        OutputSubsystem(IPV4).ReadOutputSet()
+
+    def dischargerFinalize(self):
+        cprint.printFeedback(f'Discharger is being finalized!')
+        cprint.printFeedback(f'Voltage is {self.voltageSet}, current is {self.currentSet}')
+        ShutdownOperation.limitShutdownValues()
+        ShutdownOperation.setShutdownValues()
+        ShutdownOperation.setShutdownOutput()
+
+    def checkDischargerState(self):
+        if float(MeasureSubsystem(IPV4).MeasureVoltage()) < self.voltageSet:
+            cprint.printError('Voltage is lower than set point, system will shutdown immediatly')
+            ShutdownOperation.limitShutdownValues()
+            ShutdownOperation.setShutdownValues()
+            ShutdownOperation.setShutdownOutput()
+        else:
+            cprint.printFeedback('Voltage is still in safe range!')
+        if float(MeasureSubsystem(IPV4).MeasureCurrent()) > self.cutoffCurrentSet:
+            cprint.printFeedback('Discharger current is lower than cut off current charging is being finalized!')
+            self.stop()
+        else:
+            cprint.printFeedback('Discharger current is higher or equal to cut off current charging is keep going!')
+
+    def stop(self):
+        cprint.printFeedback('Discharger stop event has been started!')
+        self._stop_event.set()
+
+    def run(self):
+        cprint.printFeedback('Discharger thread class has been started!')
+        self.dischargerInitialize()
+        while not self._stop_event.is_set():
+            cprint.printFeedback('Discharger thread class is running!')
+            time.sleep(self.sleeptime)
+            self.checkDischargerState()
+        self.dischargerFinalize()
+        cprint.printFeedback('Discharger thread class has been stopped!')
 
 # TODO Add testing all functionaly class
 
@@ -1227,6 +1304,7 @@ class TestOperations:
         Watchdog.start()
 
     def testShutdownOperation(self):
+        ShutdownOperation.limitShutdownValues()
         ShutdownOperation.setShutdownValues()
         ShutdownOperation.setShutdownOutput()
 
@@ -1242,22 +1320,29 @@ class TestOperations:
         WhDatalogger = WhDataloggerOperation(loggingtime)
         WhDatalogger.start()
 
-    def testChargerOperation(self, voltageset, currentset, cutoffcurrentset):
-        Charger = ChargingOperation(voltageset, currentset, cutoffcurrentset)
+    def testChargerOperation(self, sleeptime, voltageset, currentset, cutoffcurrentset):
+        Charger = ChargingOperation(sleeptime, voltageset, currentset, cutoffcurrentset)
         Charger.start()
+
+    def testDischargerOperation(self, sleeptime, voltageset, currentset, cufoffcurrentset):
+        Discharger = DischargingOperation(sleeptime, voltageset, currentset, cufoffcurrentset)
+        Discharger.start()
 
 
 if __name__ == '__main__':
     cprint = ColorPrinter()
     testing = TestOperations(IPV4)
-    testing.testGeneralInstructions()
-    testing.testSourceSubsystem()
-    testing.testMeasureSubsystem()
-    testing.testSystemSubsystem()
-    testing.testOutputSubsystem()
+    #testing.testGeneralInstructions()
+    #testing.testSourceSubsystem()
+    #testing.testMeasureSubsystem()
+    #testing.testSystemSubsystem()
+    #testing.testOutputSubsystem()
+    #testing.testShutdownOperation()
     testing.testWatchdogOperation(3000, 2)
-    testing.testBasicDataloggerOperation(5)
+    testing.testAhDataloggerOperation(5)
+    #testing.testChargerOperation(10, 14.5, 50, 2.5)
+    testing.testDischargerOperation(10, 12.2, -50, -5)
     while True:
         cprint.printNormal('Main still runs!')
-        time.sleep(20)
-
+        cprint.printError('Boby is sooo coool!')
+        time.sleep(2)

@@ -23,7 +23,6 @@ IPV4 = "169.254.100.243"
 
 
 class ColorPrinter:
-
     purple = '\033[95m'
     blue = '\033[94m'
     cyan = '\033[96m'
@@ -898,18 +897,15 @@ class WatchdogOperation(threading.Thread):
         cprint.printFeedback("Watchdog thread has been stopped!")
 
 
-
-# TODO Add datalogger class as Thread
-class DataloggerOperation(threading.Thread):
+# TODO Add basic datalogger class as Thread - Needs to be tested
+class BasicDataloggerOperation(threading.Thread):
     """
     It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
     """
-    dataFrameBasic=['Measured_Voltage', 'Measured_Current', 'Measured_Power']
-    dataFrameAh = ['Voltage', 'Current', 'Power', 'Ah', 'AhSeconds', 'AhHours']
-    dataFrameWh = ['Voltage', 'Current', 'Power', 'Wh', 'WhSeconds', 'WhHours']
-    fileName = 'Datalogger'
+    dataFrameBasic = ['Voltage', 'Current', 'Power']
+    fileName = 'BasicDatalogger'
 
-    def __init__(self, loggingTime, deamonState=True, FrameType = 'Basic'):
+    def __init__(self, loggingTime, deamonState=True):
         """
         :param fileName: Enter desired file name for your log file. -String
         Log file is being created with that time time-stamp and closed as soon as object is being generated!
@@ -917,20 +913,11 @@ class DataloggerOperation(threading.Thread):
         super().__init__()
         self.loggingTime = loggingTime
         self.deamonState = deamonState
-        self.FrameType = FrameType
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
-        self.finalName = f'{DataloggerOperation.fileName} {self.FrameType} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        self.finalName = f'{DataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
-        if self.FrameType == 'Basic':
-            self.dataFrame = DataloggerOperation.dataFrameBasic.insert(0, 'TimeStamp')
-        elif self.FrameType == 'Ah':
-            self.dataFrame = DataloggerOperation.dataFrameAh.insert(0, 'TimeStamp')
-        elif self.FrameType == 'Wh':
-            self.dataFrame = DataloggerOperation.dataFrameWh.insert(0, 'TimeStamp')
-        else:
-            cprint.printError('Wrong frame type has been entered! Basic frame has been selected!')
-            self.dataFrame = DataloggerOperation.dataFrameBasic.insert(0, 'TimeStamp')
+        self.dataFrame = DataloggerBasicOperation.dataFrameBasic.insert(0, 'Timestamp')
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
@@ -944,6 +931,52 @@ class DataloggerOperation(threading.Thread):
         self.dataFrame[1] = MeasureSubsystem(IPV4).MeasureVoltage()
         self.dataFrame[2] = MeasureSubsystem(IPV4).MeasureCurrent()
         self.dataFrame[3] = MeasureSubsystem(IPV4).MeasurePower()
+        cprint.printFeedback(
+            f'Voltage: {self.dataFrame[1]}V, Current: {self.dataFrame[2]}A, Power: {self.dataFrame[3]}W')
+        return self.dataFrame
+
+    def stop(self):
+        cprint.printFeedback('Datalogger stop event has been started!')
+        self._stop_event.set()
+
+    def run(self):
+        cprint.printFeedback('Datalogger thread class has been started!')
+        while not self._stop_event.is_set():
+            cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
+            self.csvLogger()
+            self.updateBasicDataFrame()
+            time.sleep(self.loggingTime)
+        cprint.printFeedback('Datalogger thread class has been stopped!')
+
+
+# TODO Add Ah datalogger class as Thread - Needs to be tested
+class AhDataloggerOperation(threading.Thread):
+    """
+    It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
+    """
+    dataFrameAh = ['Voltage', 'Current', 'Power', 'Ah', 'AhSeconds', 'AhHours']
+    fileName = 'AhDatalogger'
+
+    def __init__(self, loggingTime, deamonState=True):
+        """
+        :param fileName: Enter desired file name for your log file. -String
+        Log file is being created with that time time-stamp and closed as soon as object is being generated!
+        """
+        super().__init__()
+        self.loggingTime = loggingTime
+        self.deamonState = deamonState
+        self.setDaemon(self.deamonState)
+        self._stop_event = threading.Event()
+        self.finalName = f'{DataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        open(f'{self.finalName}', "w+").close()
+        self.dataFrame = AhDataloggerOperation.dataFrameAh.insert(0, 'Timestamp')
+
+    def csvLogger(self):
+        csvFile = open(self.finalName, 'a', newline='')
+        write = csv.writer(csvFile)
+        write.writerow(self.dataFrame)
+        csvFile.close()
+        self.dataFrame[0] = time.strftime('%d-%m-%Y %H:%M:%S')
         return self.dataFrame
 
     def updateAhDataFrame(self):
@@ -953,6 +986,54 @@ class DataloggerOperation(threading.Thread):
         self.dataFrame[4] = MeasureSubsystem(IPV4).MeasureAhPositiveTotal()
         self.dataFrame[5] = MeasureSubsystem(IPV4).ReadAhMeasurementTimeSeconds()
         self.dataFrame[6] = MeasureSubsystem(IPV4).ReadAhMeasurementTimeHours()
+        cprint.printFeedback(
+            f'Voltage: {self.dataFrame[1]}V, Current: {self.dataFrame[2]}A, Power: {self.dataFrame[3]}W, '
+            f'Ah: {self.dataFrame[4]}, AhSeconds: {self.dataFrame[5]}, AhHours: {self.dataFrame[6]}')
+        return self.dataFrame
+
+    def stop(self):
+        cprint.printFeedback('Datalogger stop event has been started!')
+        self._stop_event.set()
+
+    def run(self):
+        cprint.printFeedback('Datalogger thread class has been started!')
+        MeasureSubsystem(IPV4).SetAhMeasurementState('ON')
+        while not self._stop_event.is_set():
+            cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
+            self.csvLogger()
+            self.updateBasicDataFrame()
+            time.sleep(self.loggingTime)
+        cprint.printFeedback('Datalogger thread class has been stopped!')
+
+
+# TODO Add Ah datalogger class as Thread - Needs to be tested
+class WhDataloggerOperation(threading.Thread):
+    """
+    It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
+    """
+    dataFrameWh = ['Voltage', 'Current', 'Power', 'Wh', 'WhSeconds', 'WhHours']
+    fileName = 'WhDatalogger'
+
+    def __init__(self, loggingTime, deamonState=True):
+        """
+        :param fileName: Enter desired file name for your log file. -String
+        Log file is being created with that time time-stamp and closed as soon as object is being generated!
+        """
+        super().__init__()
+        self.loggingTime = loggingTime
+        self.deamonState = deamonState
+        self.setDaemon(self.deamonState)
+        self._stop_event = threading.Event()
+        self.finalName = f'{DataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
+        open(f'{self.finalName}', "w+").close()
+        self.dataFrame = WhDataloggerOperation.dataFrameWh.insert(0, 'Timestamp')
+
+    def csvLogger(self):
+        csvFile = open(self.finalName, 'a', newline='')
+        write = csv.writer(csvFile)
+        write.writerow(self.dataFrame)
+        csvFile.close()
+        self.dataFrame[0] = time.strftime('%d-%m-%Y %H:%M:%S')
         return self.dataFrame
 
     def updateWhDataFrame(self):
@@ -962,6 +1043,9 @@ class DataloggerOperation(threading.Thread):
         self.dataFrame[4] = MeasureSubsystem(IPV4).MeasureWhPositiveTotal()
         self.dataFrame[5] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeSeconds()
         self.dataFrame[6] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeHours()
+        cprint.printFeedback(
+            f'Voltage: {self.dataFrame[1]}V, Current: {self.dataFrame[2]}A, Power: {self.dataFrame[3]}W, '
+            f'Wh: {self.dataFrame[4]}, WhSeconds: {self.dataFrame[5]}, WhHours: {self.dataFrame[6]}')
         return self.dataFrame
 
     def stop(self):
@@ -970,49 +1054,34 @@ class DataloggerOperation(threading.Thread):
 
     def run(self):
         cprint.printFeedback('Datalogger thread class has been started!')
-        if self.dataFrame == 'Basic':
-            while not self._stop_event.is_set():
-                cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
-                self.csvLogger()
-                self.updateBasicDataFrame()
-                time.sleep(self.loggingTime)
-            cprint.printFeedback('Datalogger thread class has been stopped!')
-        elif self.dataFrame == 'Ah':
-            MeasureSubsystem(IPV4).SetAhMeasurementState('ON')
-            while not self._stop_event.is_set():
-                cprint.printFeedback('Datalogger thread class for Ah dataframe is running!')
-                self.csvLogger()
-                self.updateAhDataFrame()
-                time.sleep(self.loggingTime)
-            cprint.printFeedback('Datalogger thread class has been stopped!')
-        elif self.dataFrame == 'Wh':
-            MeasureSubsystem(IPV4).SetWhMeasurementState('ON')
-            while not self._stop_event.is_set():
-                cprint.printFeedback('Datalogger thread class for Wh dataframe is running!')
-                self.csvLogger()
-                self.updateBasicDataFrame()
-                time.sleep(self.loggingTime)
-            cprint.printFeedback('Datalogger thread class has been stopped!')
-        else:
-            cprint.printError('Wrong frame type has been entered! Basic frame has been selected!')
-            while not self._stop_event.is_set():
-                cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
-                self.csvLogger()
-                self.updateBasicDataFrame()
-                time.sleep(self.loggingTime)
-            cprint.printFeedback('Datalogger thread class has been stopped!')
-
-        #MeasureSubsystem(IPV4).SetAhMeasurementState('ON')
-        #while not self._stop_event.is_set():
-        #    cprint.printFeedback('Datalogger thread class is running!')
-        #    self.csvLogger()
-        #    self.updateDataFrame()
-        #    time.sleep(self.loggingTime)
-        #cprint.printFeedback('Datalogger thread class has been stopped!')
+        MeasureSubsystem(IPV4).SetWhMeasurementState('ON')
+        while not self._stop_event.is_set():
+            cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
+            self.csvLogger()
+            self.updateBasicDataFrame()
+            time.sleep(self.loggingTime)
+        cprint.printFeedback('Datalogger thread class has been stopped!')
 
 
 # TODO Add shutdown class
 class ShutdownOperation:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def limitShutdownValues():
+        SystemSubsystem(IPV4).SetVoltageLimit(0)
+        SystemSubsystem(IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(IPV4).SetCurrentLimit(0)
+        SystemSubsystem(IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(IPV4).SetNegativeCurrentLimit(0)
+        SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
+        SystemSubsystem(IPV4).SetPowerLimit(0)
+        SystemSubsystem(IPV4).ReadPowerLimitSet()
+        SystemSubsystem(IPV4).SetNegativePowerLimit(0)
+        SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
+
     @staticmethod
     def setShutdownValues():
         SourceSubsystem(IPV4).SetVoltage(0)
@@ -1032,7 +1101,82 @@ class ShutdownOperation:
         OutputSubsystem(IPV4).ReadOutputSet()
         SystemSubsystem(IPV4).HighlightFrontpanel()
 
+
 # TODO Add battery charging class as Thread
+class ChargingOperation(threading.Thread):
+    """
+    It has been created to run charging operation according to users desires!
+    """
+
+    def __init__(self, sleeptime, voltageSet, currentSet, cutcurrentSet, deamonState=True):
+        """
+        :param fileName: Enter desired file name for your log file. -String
+        Log file is being created with that time time-stamp and closed as soon as object is being generated!
+        """
+        super().__init__()
+        self.sleeptime = sleeptime
+        self.voltageSet = voltageSet
+        self.currentSet = currentSet
+        self.cutcurrentSet = cutcurrentSet
+        self.deamonState = deamonState
+        self.setDaemon(self.deamonState)
+        self._stop_event = threading.Event()
+
+    def chargerInitialize(self):
+        cprint.printFeedback('Charger is being initialized!')
+        SystemSubsystem(IPV4).HighlightFrontpanel()
+        SystemSubsystem(IPV4).SetVoltageLimit(self.voltageSet + 0.5)
+        SystemSubsystem(IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(IPV4).SetCurrentLimit(self.currentSet + 10)
+        SystemSubsystem(IPV4).ReadCurrentLimitSet()
+        SystemSubsystem(IPV4).SetPowerLimit(self.voltageSet * self.currentSet + 100)
+        SystemSubsystem(IPV4).ReadPowerLimitSet()
+
+        SourceSubsystem(IPV4).SetVoltage(self.voltageSet)
+        SourceSubsystem(IPV4).ReadVoltageSet()
+        SourceSubsystem(IPV4).SetCurrent(self.currentSet)
+        SourceSubsystem(IPV4).ReadCurrentSet()
+        SourceSubsystem(IPV4).SetPower(self.voltageSet * self.currentSet)
+
+        OutputSubsystem(IPV4).SetOutput(1)
+        OutputSubsystem(IPV4).ReadOutputSet()
+
+    def chargerFinalize(self):
+        cprint.printFeedback(f'Charger is being finalized!')
+        cprint.printFeedback(f'Voltage is {self.voltageSet}, current is {self.currentSet}')
+        ShutdownOperation.limitShutdownValues()
+        ShutdownOperation.setShutdownValues()
+        ShutdownOperation.setShutdownOutput()
+
+    def checkChargerState(self):
+        if MeasureSubsystem(IPV4).MeasureVoltage() > self.voltageSet:
+            cprint.printError('Voltage is exceed set point, system will shutdown immediatly')
+            ShutdownOperation.limitShutdownValues()
+            ShutdownOperation.setShutdownValues()
+            ShutdownOperation.setShutdownOutput()
+        else:
+            cprint.printFeedback('Voltage is still in safe range!')
+        if MeasureSubsystem(IPV4).MeasureCurrent() < self.cutcurrentSet:
+            cprint.printFeedback('Charging current is lower than cut off current charging is being finalized!')
+            self.stop()
+        else:
+            cprint.printFeedback('Charging current is higher or equal to cut off current charging is keep going!')
+
+    def stop(self):
+        cprint.printFeedback('Charger stop event has been started!')
+        self._stop_event.set()
+
+    def run(self):
+        cprint.printFeedback('Charger thread class has been started!')
+        self.chargerInitialize()
+        while not self._stop_event.is_set():
+            cprint.printFeedback('Charger thread class is running!')
+            self.checkChargerState()
+            time.sleep(self.sleeptime)
+        self.chargerFinalize()
+        cprint.printFeedback('Charger thread class has been stopped!')
+
+
 # TODO Add battery discharging class as Thread
 
 # TODO Add testing all functionaly class
@@ -1086,10 +1230,21 @@ class TestOperations:
         ShutdownOperation.setShutdownValues()
         ShutdownOperation.setShutdownOutput()
 
-    def testDataloggerOperation(self, loggingtime):
-        Datalogger = DataloggerOperation(loggingtime)
-        Datalogger.start()
+    def testBasicDataloggerOperation(self, loggingtime):
+        BasicDatalogger = BasicDataloggerOperation(loggingtime)
+        BasicDatalogger.start()
 
+    def testAhDataloggerOperation(self, loggingtime):
+        AhDatalogger = AhDataloggerOperation(loggingtime)
+        AhDatalogger.start()
+
+    def testWhDataloggerOperation(self, loggingtime):
+        WhDatalogger = WhDataloggerOperation(loggingtime)
+        WhDatalogger.start()
+
+    def testChargerOperation(self, voltageset, currentset, cutoffcurrentset):
+        Charger = ChargingOperation(voltageset, currentset, cutoffcurrentset)
+        Charger.start()
 
 
 if __name__ == '__main__':
@@ -1101,20 +1256,8 @@ if __name__ == '__main__':
     testing.testSystemSubsystem()
     testing.testOutputSubsystem()
     testing.testWatchdogOperation(3000, 2)
-    testing.testDataloggerOperation(5)
+    testing.testBasicDataloggerOperation(5)
     while True:
         cprint.printNormal('Main still runs!')
         time.sleep(20)
 
-    #Watchdog = WatchdogOperation(4000, 3)
-    #Watchdog.start()
-    #time.sleep(1)
-    #Datalogger = DataloggerOperation(1)
-    #Datalogger.start()
-    #time.sleep(1)
-    #while True:
-    #    time.sleep(5)
-    #    cprint.printError('This is an Error Message!')
-    #    cprint.printFeedback('Main Operion is running now!')
-    #    cprint.printComment('Watchdog runs every 2 seconds')
-    #    cprint.printNormal('Datalogger runs every 5 seconds')

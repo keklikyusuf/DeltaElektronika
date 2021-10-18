@@ -1104,81 +1104,6 @@ class ShutdownOperation:
         SystemSubsystem(IPV4).HighlightFrontpanel()
 
 
-class DischargingOperation(threading.Thread):
-    """
-    It has been created to run discharging operation according to users desires!
-    """
-
-    def __init__(self, sleeptime, voltageSet, currentSet, cutoffCurrentSet, deamonState=True):
-        """
-        :param fileName: Enter desired file name for your log file. -String
-        Log file is being created with that time time-stamp and closed as soon as object is being generated!
-        """
-        super().__init__()
-        self.sleeptime = sleeptime
-        self.voltageSet = voltageSet
-        self.currentSet = currentSet
-        self.cutoffCurrentSet = cutoffCurrentSet
-        self.deamonState = deamonState
-        self.setDaemon(self.deamonState)
-        self._stop_event = threading.Event()
-
-    def dischargerInitialize(self):
-        cprint.printComment('Discharger is being initialized!')
-        SystemSubsystem(IPV4).HighlightFrontpanel()
-        SystemSubsystem(IPV4).SetVoltageLimit(self.voltageSet - 0.5, 'ON')
-        SystemSubsystem(IPV4).ReadVoltageLimitSet()
-        SystemSubsystem(IPV4).SetNegativeCurrentLimit(self.currentSet - 10, 'ON')
-        SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
-        SystemSubsystem(IPV4).SetNegativePowerLimit(self.voltageSet * self.currentSet - 100, 'ON')
-        SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
-
-        SourceSubsystem(IPV4).SetVoltage(self.voltageSet)
-        SourceSubsystem(IPV4).ReadVoltageSet()
-        SourceSubsystem(IPV4).SetNegativeCurrent(self.currentSet)
-        SourceSubsystem(IPV4).ReadCurrentSet()
-        SourceSubsystem(IPV4).SetNegativePower(self.voltageSet * self.currentSet)
-        SourceSubsystem(IPV4).ReadPowerSet()
-
-        OutputSubsystem(IPV4).SetOutput(1)
-        OutputSubsystem(IPV4).ReadOutputSet()
-
-    def dischargerFinalize(self):
-        cprint.printFeedback(f'Discharger is being finalized!')
-        cprint.printFeedback(f'Voltage is {self.voltageSet}, current is {self.currentSet}')
-        ShutdownOperation.limitShutdownValues()
-        ShutdownOperation.setShutdownValues()
-        ShutdownOperation.setShutdownOutput()
-
-    def checkDischargerState(self):
-        if float(MeasureSubsystem(IPV4).MeasureVoltage()) < self.voltageSet:
-            cprint.printError('Voltage is lower than set point, system will shutdown immediatly')
-            ShutdownOperation.limitShutdownValues()
-            ShutdownOperation.setShutdownValues()
-            ShutdownOperation.setShutdownOutput()
-        else:
-            cprint.printFeedback('Voltage is still in safe range!')
-        if float(MeasureSubsystem(IPV4).MeasureCurrent()) > self.cutoffCurrentSet:
-            cprint.printFeedback('Discharger current is lower than cut off current charging is being finalized!')
-            self.stop()
-        else:
-            cprint.printFeedback('Discharger current is higher or equal to cut off current charging is keep going!')
-
-    def stop(self):
-        cprint.printFeedback('Discharger stop event has been started!')
-        self._stop_event.set()
-
-    def run(self):
-        cprint.printFeedback('Discharger thread class has been started!')
-        self.dischargerInitialize()
-        while not self._stop_event.is_set():
-            cprint.printFeedback('Discharger thread class is running!')
-            time.sleep(self.sleeptime)
-            self.checkDischargerState()
-        self.dischargerFinalize()
-        cprint.printFeedback('Discharger thread class has been stopped!')
-
-
 class ChargingOperation(threading.Thread):
     """
     It has been created to run discharging operation according to users desires!
@@ -1218,7 +1143,6 @@ class ChargingOperation(threading.Thread):
     @staticmethod
     def chargerFinalize():
         cprint.printError(f'Charger is being finalized!')
-        cprint.printFeedback(f'')
         ShutdownOperation.limitShutdownValues()
         ShutdownOperation.setShutdownValues()
         ShutdownOperation.setShutdownOutput()
@@ -1252,6 +1176,7 @@ class ChargingOperation(threading.Thread):
         SourceSubsystem(IPV4).SetVoltage(self.floatVoltage)
         SourceSubsystem(IPV4).ReadVoltageSet()
         SourceSubsystem(IPV4).SetCurrent(self.floatCurrent)
+        SourceSubsystem(IPV4).ReadCurrentSet()
         SourceSubsystem(IPV4).SetPower(self.floatCurrent * self.floatVoltage + 500)
         SourceSubsystem(IPV4).ReadPowerSet()
         time.sleep(1)
@@ -1275,22 +1200,22 @@ class ChargingOperation(threading.Thread):
 
     def stop(self):
         cprint.printError('Discharger stop event has been started!')
+        ChargingOperation.chargerFinalize()
         self._stop_event.set()
 
     def run(self):
         cprint.printError('Charger thread class has been started!')
         self.chargerInitialize()
         self.bulkStage()
-        ChargerrOperation.outputInitialize()
+        ChargingOperation.outputInitialize()
         while not self._stop_event.is_set():
             cprint.printFeedback('Charger thread class is running!')
             time.sleep(self.sleeptime)
             self.checkChargingStage()
-        ChargerrOperation.chargerFinalize()
+        ChargingOperation.chargerFinalize()
         cprint.printFeedback('Charger thread class has been stopped!')
 
 
-# TODO Discharge Operation Must Be Created Here!
 class DischargingOperation(threading.Thread):
     """
     It has been created to run discharging operation according to users desires!
@@ -1310,23 +1235,21 @@ class DischargingOperation(threading.Thread):
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
 
-    def dischargeInitialize(self):
-
-    def chargerInitialize(self):
-        cprint.printError('Charger is being initialized!')
+    def dischargerInitialize(self):
+        cprint.printComment('Discharger is being initialized!')
         SystemSubsystem(IPV4).HighlightFrontpanel()
-        SystemSubsystem(IPV4).SetVoltageLimit(self.bulkVoltage + 0.5, 'ON')
+        SystemSubsystem(IPV4).SetVoltageLimit(self.dischargeVoltage + 0.5, 'ON')
         SystemSubsystem(IPV4).ReadVoltageLimitSet()
-        SystemSubsystem(IPV4).SetCurrentLimit(self.bulkCurrent + 10, 'ON')
-        SystemSubsystem(IPV4).ReadCurrentLimitSet()
-        SystemSubsystem(IPV4).SetPowerLimit(self.bulkVoltage * self.bulkCurrent + 100, 'ON')
-        SystemSubsystem(IPV4).ReadPowerLimitSet()
+        SystemSubsystem(IPV4).SetNegativeCurrentLimit(self.dischargeCurrent - 10, 'ON')
+        SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
+        SystemSubsystem(IPV4).SetNegativePowerLimit(self.dischargeVoltage * self.dischargeCurrent - 100, 'ON')
+        SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
         time.sleep(1)
 
+
     @staticmethod
-    def chargerFinalize():
-        cprint.printError(f'Charger is being finalized!')
-        cprint.printFeedback(f'')
+    def dischargerFinalize():
+        cprint.printComment(f'Discharger is being finalized!')
         ShutdownOperation.limitShutdownValues()
         ShutdownOperation.setShutdownValues()
         ShutdownOperation.setShutdownOutput()
@@ -1337,64 +1260,38 @@ class DischargingOperation(threading.Thread):
         OutputSubsystem(IPV4).ReadOutputSet()
         time.sleep(1)
 
-    def bulkStage(self):
-        cprint.printError('Bulk Stage is Initialized!')
-        SourceSubsystem(IPV4).SetVoltage(self.bulkVoltage)
+    def dischargeStage(self):
+        cprint.printComment('Discharging stage is started!')
+        SourceSubsystem(IPV4).SetVoltage(self.dischargeVoltage)
         SourceSubsystem(IPV4).ReadVoltageSet()
-        SourceSubsystem(IPV4).SetCurrent(self.bulkCurrent)
-        SourceSubsystem(IPV4).SetPower(self.bulkCurrent * self.bulkVoltage + 50)
-        SourceSubsystem(IPV4).ReadPowerSet()
+        SourceSubsystem(IPV4).SetNegativeCurrent(self.dischargeCurrent)
+        SourceSubsystem(IPV4).ReadNegativeCurrentSet()
+        SourceSubsystem(IPV4).SetNegativePower(self.dischargeCurrent * self.dischargeVoltage - 50)
+        SourceSubsystem(IPV4).ReadNegativePowerSet()
         time.sleep(1)
 
-    def absorptionStage(self):
-        cprint.printError('Absorption Stage is Initialized!')
-        SourceSubsystem(IPV4).SetVoltage(self.absorptionVoltage)
-        SourceSubsystem(IPV4).ReadVoltageSet()
-        SourceSubsystem(IPV4).SetCurrent(self.absorptionCurrent)
-        SourceSubsystem(IPV4).SetPower(self.absorptionVoltage * self.absorptionCurrent + 50)
-        SourceSubsystem(IPV4).ReadPowerSet()
-        time.sleep(1)
-
-    def floatingStage(self):
-        cprint.printError('Floating Stage is Initialized!')
-        SourceSubsystem(IPV4).SetVoltage(self.floatVoltage)
-        SourceSubsystem(IPV4).ReadVoltageSet()
-        SourceSubsystem(IPV4).SetCurrent(self.floatCurrent)
-        SourceSubsystem(IPV4).SetPower(self.floatCurrent * self.floatVoltage + 500)
-        SourceSubsystem(IPV4).ReadPowerSet()
-        time.sleep(1)
-
-    def checkChargingStage(self):
-        if (float(MeasureSubsystem(IPV4).MeasureCurrent()) < self.absorptionCurrent) and self.bulkMode:
-            self.absorptionStage()
-            self.bulkMode = False
-            self.absorptionMode = True
-        elif (float(MeasureSubsystem(IPV4).MeasureCurrent()) < self.floatCurrent) and self.absorptionMode:
-            self.floatingStage()
-            self.absorptionMode = False
-            self.floatingMode = True
-
-        if self.bulkMode:
-            cprint.printError('Bulk Mode is active!')
-        elif self.absorptionMode:
-            cprint.printError('Absorption is active!')
-        elif self.floatingMode:
-            cprint.printError('Floating mode active!')
+    def checkDischargingStage(self):
+        if float(MeasureSubsystem(IPV4).MeasureCurrent()) > self.cutoffCurrent:
+            DischargingOperation.dischargerFinalize()
+            self.stop()
+        else:
+            cprint.printError('Discharging is still running!')
 
     def stop(self):
         cprint.printError('Discharger stop event has been started!')
+        DischargingOperation.dischargerFinalize()
         self._stop_event.set()
 
     def run(self):
-        cprint.printError('Charger thread class has been started!')
-        self.chargerInitialize()
-        self.bulkStage()
-        ChargerrOperation.outputInitialize()
+        cprint.printError('Discharger thread class has been started!')
+        self.dischargerInitialize()
+        self.dischargeStage()
+        DischargingOperation.outputInitialize()
         while not self._stop_event.is_set():
-            cprint.printFeedback('Charger thread class is running!')
+            cprint.printFeedback('Discharger thread class is running!')
             time.sleep(self.sleeptime)
-            self.checkChargingStage()
-        ChargerrOperation.chargerFinalize()
+            self.checkDischargingStage()
+        DischargingOperation.dischargerFinalize()
         cprint.printFeedback('Charger thread class has been stopped!')
 
 
@@ -1474,11 +1371,13 @@ if __name__ == '__main__':
     cprint = ColorPrinter()
     Datalogger = AhDataloggerOperation(5)
     Datalogger.start()
-    Watchdog = WatchdogOperation(5000, 4)
-    Watchdog.start()
-    Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8)
+    #Watchdog = WatchdogOperation(5000, 4)
+    #Watchdog.start()
+    #Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8)
+    Discharging = DischargingOperation(sleeptime=5, dischargeCurrent=-400, dischargeVoltage=11.5, cutoffCurrent=-120)
     time.sleep(1)
-    Charging.start()
+    #Charging.start()
+    Discharging.start()
     while True:
         time.sleep(50)
         cprint.printError('Boby is sooo coool!')

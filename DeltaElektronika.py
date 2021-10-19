@@ -22,6 +22,13 @@ __version__ = "0.0.1"  # semVersion (Major.Minor.Revision)
 
 IPV4 = "169.254.100.243"
 
+filename='systemlog'
+finalName = f'{filename} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.log'
+
+logging.basicConfig(filename=finalName, level=logging.DEBUG, encoding='utf-8',
+                    format='%(asctime)s | %(name)s | %(levelname)s:%(message)s'
+                    '\n-----------------------------------------------------------------------------------------------')
+logger = logging.getLogger(__name__)
 
 class ColorPrinter:
     purple = '\033[95m'
@@ -49,6 +56,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        logger.debug(message)
         return text
 
     def printFeedback(self, message):
@@ -61,6 +69,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        logger.debug(message)
         return text
 
     def printComment(self, message):
@@ -73,6 +82,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        logger.debug(message)
         return text
 
     def printNormal(self, message):
@@ -85,6 +95,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        logger.debug(message)
         return text
 
 
@@ -121,7 +132,8 @@ class Communication:
         communication.connect((self.IPV4, Communication.port_name))
         communication.send(send_message)
         communication.close()
-        cprint.printFeedback(f'{send_message} has been sent to Delta!')
+        #cprint.printFeedback(f'{send_message} has been sent to Delta!')
+        logger.debug(f'{send_message} has been sent to Delta!')
         return send_message
 
     def sendReceiveMessage(self, message):
@@ -136,7 +148,8 @@ class Communication:
         communication_message = communication.recv(Communication.buffer_size).decode('UTF-8')
         communication.close()
         received_message = communication_message.rstrip('\n')
-        cprint.printFeedback(f'{received_message} has been received from Delta!')
+        #cprint.printFeedback(f'{received_message} has been received from Delta!')
+        logger.debug(f'{received_message} has been received from Delta!')
         return received_message
 
     def sendMessageWithountPrint(self, message):
@@ -1009,7 +1022,6 @@ class AhDataloggerOperation(threading.Thread):
         cprint.printFeedback('Datalogger thread class has been stopped!')
 
 
-# TODO Add negative discharge Wh as well
 class WhDataloggerOperation(threading.Thread):
     """
     It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
@@ -1039,12 +1051,13 @@ class WhDataloggerOperation(threading.Thread):
         WhDataloggerOperation.dataFrameWh[0] = time.strftime('%d-%m-%Y %H:%M:%S')
         return WhDataloggerOperation.dataFrameWh
 
-    def updateWhDataFrame(self):
+    @staticmethod
+    def updateWhDataFrame():
         WhDataloggerOperation.dataFrameWh[1] = MeasureSubsystem(IPV4).MeasureVoltage()
         WhDataloggerOperation.dataFrameWh[2] = MeasureSubsystem(IPV4).MeasureCurrent()
         WhDataloggerOperation.dataFrameWh[3] = MeasureSubsystem(IPV4).MeasurePower()
         WhDataloggerOperation.dataFrameWh[4] = MeasureSubsystem(IPV4).MeasureWhPositiveTotal()
-        WhDataloggerOperation.dataFrameWh[5] = MeasureSubsystem(IPV4).MeasureWhMaximumNegativeCurrent()
+        WhDataloggerOperation.dataFrameWh[5] = MeasureSubsystem(IPV4).MeasureWhNegativeTotal()
         WhDataloggerOperation.dataFrameWh[6] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeSeconds()
         WhDataloggerOperation.dataFrameWh[7] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeHours()
         cprint.printFeedback(
@@ -1064,7 +1077,7 @@ class WhDataloggerOperation(threading.Thread):
         while not self._stop_event.is_set():
             cprint.printFeedback('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
-            self.updateWhDataFrame()
+            WhDataloggerOperation.updateWhDataFrame()
             time.sleep(self.loggingTime)
         cprint.printFeedback('Datalogger thread class has been stopped!')
 
@@ -1304,7 +1317,7 @@ class CyclingOperation(threading.Thread):
         """
 
     def __init__(self):
-        pass
+        super().__init__()
 
     def stop(self):
         cprint.printError('Discharger stop event has been started!')
@@ -1398,10 +1411,10 @@ if __name__ == '__main__':
     Datalogger.start()
     Watchdog = WatchdogOperation(5000, 4)
     Watchdog.start()
-    Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8)
-    Discharging = DischargingOperation(sleeptime=5, dischargeCurrent=-400, dischargeVoltage=11.5, cutoffCurrent=-120)
+    #Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8)
+    Discharging = DischargingOperation(sleeptime=5, dischargeCurrent=-400, dischargeVoltage=10.5, cutoffCurrent=-4)
     time.sleep(1)
-    Charging.start()
+    #Charging.start()
     Discharging.start()
     while True:
         time.sleep(50)

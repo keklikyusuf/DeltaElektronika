@@ -14,6 +14,7 @@ import time
 import csv
 import datetime
 import sys
+import logging
 
 """ Module to handle communication with DELTA POWER SUPPLY  """
 
@@ -1013,7 +1014,7 @@ class WhDataloggerOperation(threading.Thread):
     """
     It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
     """
-    dataFrameWh = ['Voltage', 'Current', 'Power', 'Wh', 'WhSeconds', 'WhHours']
+    dataFrameWh = ['Voltage', 'Current', 'Power', 'PositiveWh', 'NegativeWh', 'WhSeconds', 'WhHours']
     fileName = 'WhDatalogger'
 
     def __init__(self, loggingTime, deamonState=True):
@@ -1043,12 +1044,14 @@ class WhDataloggerOperation(threading.Thread):
         WhDataloggerOperation.dataFrameWh[2] = MeasureSubsystem(IPV4).MeasureCurrent()
         WhDataloggerOperation.dataFrameWh[3] = MeasureSubsystem(IPV4).MeasurePower()
         WhDataloggerOperation.dataFrameWh[4] = MeasureSubsystem(IPV4).MeasureWhPositiveTotal()
-        WhDataloggerOperation.dataFrameWh[5] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeSeconds()
-        WhDataloggerOperation.dataFrameWh[6] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeHours()
+        WhDataloggerOperation.dataFrameWh[5] = MeasureSubsystem(IPV4).MeasureWhMaximumNegativeCurrent()
+        WhDataloggerOperation.dataFrameWh[6] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeSeconds()
+        WhDataloggerOperation.dataFrameWh[7] = MeasureSubsystem(IPV4).ReadWhMeasurementTimeHours()
         cprint.printFeedback(
             f'Voltage: {WhDataloggerOperation.dataFrameWh[1]}V, Current: {WhDataloggerOperation.dataFrameWh[2]}A, '
-            f'Power: {WhDataloggerOperation.dataFrameWh[3]}W, Wh: {WhDataloggerOperation.dataFrameWh[4]}, '
-            f'WhSeconds: {WhDataloggerOperation.dataFrameWh[5]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}')
+            f'Power: {WhDataloggerOperation.dataFrameWh[3]}W, PositiveWh: {WhDataloggerOperation.dataFrameWh[4]}, '
+            f'NegativeWh: {WhDataloggerOperation.dataFrameWh[5]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}, '
+            f'WhSeconds: {WhDataloggerOperation.dataFrameWh[7]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}')
         return WhDataloggerOperation.dataFrameWh
 
     def stop(self):
@@ -1106,7 +1109,7 @@ class ShutdownOperation:
 
 class ChargingOperation(threading.Thread):
     """
-    It has been created to run discharging operation according to users desires!
+    It has been created to run charging operation according to users desires!
     """
 
     def __init__(self, sleeptime=10, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0, deamonState=True):
@@ -1295,6 +1298,28 @@ class DischargingOperation(threading.Thread):
         cprint.printFeedback('Charger thread class has been stopped!')
 
 
+class CyclingOperation(threading.Thread):
+    """
+        It has been created to run battery cycling operation according to users desires!
+        """
+
+    def __init__(self):
+        pass
+
+    def stop(self):
+        cprint.printError('Discharger stop event has been started!')
+        DischargingOperation.dischargerFinalize()
+        self._stop_event.set()
+
+    def run(self):
+        while not self._stop_event.is_set():
+            cprint.printFeedback('Discharger thread class is running!')
+            time.sleep(self.sleeptime)
+            self.checkDischargingStage()
+        DischargingOperation.dischargerFinalize()
+        cprint.printFeedback('Charger thread class has been stopped!')
+
+
 class TestOperations:
 
     def __init__(self, IPV4):
@@ -1371,12 +1396,12 @@ if __name__ == '__main__':
     cprint = ColorPrinter()
     Datalogger = AhDataloggerOperation(5)
     Datalogger.start()
-    #Watchdog = WatchdogOperation(5000, 4)
-    #Watchdog.start()
-    #Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8)
+    Watchdog = WatchdogOperation(5000, 4)
+    Watchdog.start()
+    Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8)
     Discharging = DischargingOperation(sleeptime=5, dischargeCurrent=-400, dischargeVoltage=11.5, cutoffCurrent=-120)
     time.sleep(1)
-    #Charging.start()
+    Charging.start()
     Discharging.start()
     while True:
         time.sleep(50)

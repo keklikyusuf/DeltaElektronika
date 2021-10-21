@@ -25,7 +25,7 @@ IPV4 = "169.254.100.243"
 filename='systemlog'
 finalName = f'{filename} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.log'
 
-activateDebugLogger = False
+activateDebugLogger = True
 if activateDebugLogger:
     logging.basicConfig(filename=finalName, level=logging.DEBUG, encoding='utf-8',
                     format='%(asctime)s | %(name)s | %(levelname)s:%(message)s'
@@ -138,7 +138,7 @@ class Communication:
         communication.connect((self.IPV4, Communication.port_name))
         communication.send(send_message)
         communication.close()
-        logger.debug(f'{send_message} has been sent to Delta!')
+        #logger.debug(f'{send_message} has been sent to Delta!')
         return send_message
 
     def sendReceiveMessage(self, message):
@@ -153,7 +153,7 @@ class Communication:
         communication_message = communication.recv(Communication.buffer_size).decode('UTF-8')
         communication.close()
         received_message = communication_message.rstrip('\n')
-        logger.debug(f'{received_message} has been received from Delta!')
+        #logger.debug(f'{received_message} has been received from Delta!')
         return received_message
 
 
@@ -922,6 +922,9 @@ class BasicDataloggerOperation(threading.Thread):
         logger.debug(
             f'Voltage: {BasicDataloggerOperation.dataFrameBasic[1]}V, Current: {BasicDataloggerOperation.dataFrameBasic[2]}A, '
             f'Power: {BasicDataloggerOperation.dataFrameBasic[3]}W')
+        cprint.printFeedback(
+            f'Voltage: {BasicDataloggerOperation.dataFrameBasic[1]}V, Current: {BasicDataloggerOperation.dataFrameBasic[2]}A, '
+            f'Power: {BasicDataloggerOperation.dataFrameBasic[3]}W')
         return BasicDataloggerOperation.dataFrameBasic
 
     def stop(self):
@@ -1038,6 +1041,11 @@ class WhDataloggerOperation(threading.Thread):
             f'Power: {WhDataloggerOperation.dataFrameWh[3]}W, PositiveWh: {WhDataloggerOperation.dataFrameWh[4]}, '
             f'NegativeWh: {WhDataloggerOperation.dataFrameWh[5]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}, '
             f'WhSeconds: {WhDataloggerOperation.dataFrameWh[7]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}')
+        cprint.printFeedback(
+            f'Voltage: {WhDataloggerOperation.dataFrameWh[1]}V, Current: {WhDataloggerOperation.dataFrameWh[2]}A, '
+            f'Power: {WhDataloggerOperation.dataFrameWh[3]}W, PositiveWh: {WhDataloggerOperation.dataFrameWh[4]}, '
+            f'NegativeWh: {WhDataloggerOperation.dataFrameWh[5]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}, '
+            f'WhSeconds: {WhDataloggerOperation.dataFrameWh[7]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}')
         return WhDataloggerOperation.dataFrameWh
 
     def stop(self):
@@ -1103,7 +1111,7 @@ class ChargingOperation(threading.Thread):
         self.sleeptime = sleeptime
         self.bulkCurrent = bulkCurrent
         self.bulkVoltage = bulkVoltage
-        self.absorptionCurrent = self.bulkCurrent * 0.9
+        self.absorptionCurrent = self.bulkCurrent * 0.8
         self.absorptionVoltage = self.bulkVoltage
         self.floatCurrent = self.bulkCurrent * 0.02
         self.floatVoltage = floatVoltage
@@ -1189,7 +1197,6 @@ class ChargingOperation(threading.Thread):
 
     def stop(self):
         logger.debug('Discharger stop event has been started!')
-        ChargingOperation.chargerFinalize()
         self._stop_event.set()
 
     def run(self):
@@ -1286,7 +1293,7 @@ class CyclingOperation(threading.Thread):
         It has been created to run battery cycling operation according to users desires!
     """
     def __init__(self, sleeptime=10, cycletime = 0, bulkCurrent = 0.0, bulkVoltage = 0.0, floatVoltage = 0.0,
-                 floatTime = 0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, deamonState=True):
+                 floatTime = 0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, restTime = 30.0, deamonState=True):
         super().__init__()
         self.sleeptime = sleeptime
         self.cycletime = cycletime
@@ -1300,17 +1307,18 @@ class CyclingOperation(threading.Thread):
         self.bulkMode = True
         self.absorptionMode = False
         self.floatingMode = False
+        self.chargingMode = False
+        self.dischargingMode = False
+        self.chargingInitializeMode = False
+        self.dischargingInitializeMode = False
         self.dischargeCurrent = dischargeCurrent
         self.dischargeVoltage = dischargeVoltage
         self.cutoffCurrent = cutoffCurrent
+        self.restTime = restTime
         self.deamonState = deamonState
         self.counter = 0
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
-
-
-
-
 
     def chargerInitialize(self):
         logger.debug('Charger is being initialized!')
@@ -1324,11 +1332,12 @@ class CyclingOperation(threading.Thread):
         time.sleep(1)
 
     @staticmethod
-    def chargerFinalize():
+    def cyclingFinalize():
         logger.debug(f'Charger is being finalized!')
         ShutdownOperation.limitShutdownValues()
         ShutdownOperation.setShutdownValues()
         ShutdownOperation.setShutdownOutput()
+        time.sleep(1)
 
     @staticmethod
     def outputInitialize():
@@ -1364,62 +1373,6 @@ class CyclingOperation(threading.Thread):
         SourceSubsystem(IPV4).ReadPowerSet()
         time.sleep(1)
 
-
-
-
-
-    def dischargerInitialize(self):
-        logger.debug('Discharger is being initialized!')
-        SystemSubsystem(IPV4).HighlightFrontpanel()
-        SystemSubsystem(IPV4).SetVoltageLimit(self.dischargeVoltage + 0.5, 'ON')
-        SystemSubsystem(IPV4).ReadVoltageLimitSet()
-        SystemSubsystem(IPV4).SetNegativeCurrentLimit(self.dischargeCurrent - 10, 'ON')
-        SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
-        SystemSubsystem(IPV4).SetNegativePowerLimit(self.dischargeVoltage * self.dischargeCurrent - 100, 'ON')
-        SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
-        time.sleep(1)
-
-
-    @staticmethod
-    def dischargerFinalize():
-        logger.debug(f'Discharger is being finalized!')
-        ShutdownOperation.limitShutdownValues()
-        ShutdownOperation.setShutdownValues()
-        ShutdownOperation.setShutdownOutput()
-
-    @staticmethod
-    def outputInitialize():
-        OutputSubsystem(IPV4).SetOutput(1)
-        OutputSubsystem(IPV4).ReadOutputSet()
-        time.sleep(1)
-
-    def dischargeStage(self):
-        logger.debug('Discharging stage is started!')
-        SourceSubsystem(IPV4).SetVoltage(self.dischargeVoltage)
-        SourceSubsystem(IPV4).ReadVoltageSet()
-        SourceSubsystem(IPV4).SetNegativeCurrent(self.dischargeCurrent)
-        SourceSubsystem(IPV4).ReadNegativeCurrentSet()
-        SourceSubsystem(IPV4).SetNegativePower(self.dischargeCurrent * self.dischargeVoltage - 50)
-        SourceSubsystem(IPV4).ReadNegativePowerSet()
-        time.sleep(1)
-
-
-
-
-
-
-
-    def checkDischargingStage(self):
-        if float(MeasureSubsystem(IPV4).MeasureCurrent()) > self.cutoffCurrent:
-            DischargingOperation.dischargerFinalize()
-            self.stop()
-        else:
-            logger.debug('Discharging is still running!')
-
-
-
-
-
     def checkChargingStage(self):
         if (float(MeasureSubsystem(IPV4).MeasureCurrent()) < self.absorptionCurrent) and self.bulkMode:
             self.absorptionStage()
@@ -1433,51 +1386,85 @@ class CyclingOperation(threading.Thread):
         if self.bulkMode:
             logger.debug('Bulk Mode is active!')
         elif self.absorptionMode:
-            logger.debug('Absorption is active!')
+            logger.debug('Absorption Mode is active!')
         elif self.floatingMode:
             logger.debug('Floating mode active!')
             logger.debug(f'Float time is: {self.floatTime}')
             time.sleep(self.floatTime)
-            self.stop()
+            CyclingOperation.cyclingFinalize()
+            time.sleep(self.restTime)
+            self.bulkMode = True
+            self.absorptionMode = False
+            self.floatingMode = False
+            self.chargingMode = False
+            self.dischargingInitializeMode = True
+            self.counter += 1
 
+    def dischargerInitialize(self):
+        logger.debug('Discharger is being initialized!')
+        SystemSubsystem(IPV4).HighlightFrontpanel()
+        SystemSubsystem(IPV4).SetVoltageLimit(self.dischargeVoltage + 0.5, 'ON')
+        SystemSubsystem(IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(IPV4).SetNegativeCurrentLimit(self.dischargeCurrent - 10, 'ON')
+        SystemSubsystem(IPV4).ReadNegativeCurrentLimitSet()
+        SystemSubsystem(IPV4).SetNegativePowerLimit(self.dischargeVoltage * self.dischargeCurrent - 100, 'ON')
+        SystemSubsystem(IPV4).ReadNegativePowerLimitSet()
+        time.sleep(1)
 
+    def dischargerStage(self):
+        logger.debug('Discharging stage is started!')
+        SourceSubsystem(IPV4).SetVoltage(self.dischargeVoltage)
+        SourceSubsystem(IPV4).ReadVoltageSet()
+        SourceSubsystem(IPV4).SetNegativeCurrent(self.dischargeCurrent)
+        SourceSubsystem(IPV4).ReadNegativeCurrentSet()
+        SourceSubsystem(IPV4).SetNegativePower(self.dischargeCurrent * self.dischargeVoltage - 50)
+        SourceSubsystem(IPV4).ReadNegativePowerSet()
+        time.sleep(1)
 
-
-
-
-
+    def checkDischargingStage(self):
+        if float(MeasureSubsystem(IPV4).MeasureCurrent()) > self.cutoffCurrent:
+            CyclingOperation.cyclingFinalize()
+            time.sleep(self.restTime)
+            self.dischargingMode = False
+            self.chargingInitializeMode = True
+            self.counter += 1
+        else:
+            logger.debug('Discharging is still running!')
 
     def stop(self):
-        cprint.printError('Cycling thread class stop event has been started!')
-        DischargingOperation.dischargerFinalize()
+        logger.debug('Cycling thread class stop event has been started!')
         self._stop_event.set()
 
-    ##########################################
-    def run(self):
-        logger.debug('Charger thread class has been started!')
-        self.chargerInitialize()
-        self.bulkStage()
-        ChargingOperation.outputInitialize()
-        while not self._stop_event.is_set():
-            logger.debug('Charger thread class is running!')
-            time.sleep(self.sleeptime)
-            self.checkChargingStage()
-        ChargingOperation.chargerFinalize()
-        logger.debug('Charger thread class has been stopped!')
-    #####################################################
     def run(self):
         logger.debug('Cycling thread class has been started!')
-        self.chargerInitialize()
-        self.bulkStage()
-        ChargingOperation().outputInitialize()
+        self.chargingInitializeMode = True
         while not self._stop_event.is_set():
-            if counter < 1:
-                pass
-            cprint.printFeedback('Cycling thread class is running!')
-            time.sleep(self.sleeptime)
-            self.checkChargingStage()
-            cprint.printFeedback('Cycling thread class is running!')
-        DischargingOperation.dischargerFinalize()
+            if self.counter < self.cycletime:
+                if self.chargingInitializeMode:
+                    cprint.printFeedback('Charger mode initialized!')
+                    self.chargerInitialize()
+                    self.bulkStage()
+                    CyclingOperation().outputInitialize()
+                    self.chargingInitializeMode = False
+                    self.chargingMode = True
+                elif self.chargingMode:
+                    cprint.printFeedback('Cycling runs at charging stage!')
+                    time.sleep(self.sleeptime)
+                    self.checkChargingStage()
+                elif self.dischargingInitializeMode:
+                    cprint.printFeedback('Discharging mode initialized!')
+                    self.dischargerInitialize()
+                    self.dischargerStage()
+                    CyclingOperation.outputInitialize()
+                    self.dischargingInitializeMode = False
+                    self.dischargingMode = True
+                elif self.dischargingMode:
+                    cprint.printFeedback('Cycling runs at discharging stage!')
+                    time.sleep(self.sleeptime)
+                    self.checkDischargingStage()
+            else:
+                self.stop()
+        CyclingOperation.cyclingFinalize()
         cprint.printFeedback('Cycling thread class has been stopped!')
 
 
@@ -1558,12 +1545,21 @@ class TestOperations:
         Discharger = DischargingOperation(sleeptime, voltageset, currentset, cufoffcurrentset)
         Discharger.start()
 
+    def testCyclingOperation(self, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage,
+                               floatTime, dischargeCurrent, dischargeVoltage, cutoffCurrent=-2 ):
+        logger.debug("Discharging opreation test runs!")
+        Cycler = CyclingOperation(sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage, floatTime,
+                                   dischargeCurrent, dischargeVoltage, cutoffCurrent)
+        Cycler.start()
+
 
 if __name__ == '__main__':
     cprint.printFeedback('Main Operation has been stated!')
-    Charging = ChargingOperation(sleeptime=5, bulkCurrent=200, bulkVoltage=14.4, floatVoltage=13.8, floatTime = 10)
-    Discharging = DischargingOperation(sleeptime=5, dischargeCurrent=-50, dischargeVoltage=11.5, cutoffCurrent=-2)
-    time.sleep(1)
-    Charging.start()
+    Cycling = CyclingOperation(sleeptime=5, cycletime=10, bulkCurrent=400, bulkVoltage=14.4, floatVoltage=13.8,
+                               floatTime = 30, dischargeCurrent=-50, dischargeVoltage=11.5, cutoffCurrent=-57 )
+    Cycling.start()
     while True:
-        pass
+        cprint.printFeedback('Main Operation is running!')
+        time.sleep(60)
+
+

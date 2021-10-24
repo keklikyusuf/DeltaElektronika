@@ -5,7 +5,7 @@
 # Delta Elektronika SM15K Communication Socket Library.
 #
 # Revision: @keklikyusuf
-# 0.0.3: Initial version
+# 0.0.2: Initial version
 
 
 import socket
@@ -1037,7 +1037,7 @@ class AhDataloggerOperation(threading.Thread):
 
     def run(self):
         logger.debug('Datalogger thread class has been started!')
-        MeasureSubsystem(IPV4).SetAhMeasurementState('ON')
+        MeasureSubsystem(self.IPV4).SetAhMeasurementState('ON')
         while not self._stop_event.is_set():
             logger.debug('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
@@ -1099,7 +1099,7 @@ class WhDataloggerOperation(threading.Thread):
 
     def run(self):
         logger.debug('Datalogger thread class has been started!')
-        MeasureSubsystem(IPV4).SetWhMeasurementState('ON')
+        MeasureSubsystem(self.IPV4).SetWhMeasurementState('ON')
         while not self._stop_event.is_set():
             logger.debug('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()

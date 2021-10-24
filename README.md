@@ -146,7 +146,7 @@ cprint = ColorPrinter()
 
 ```
 > Socket has been created to be able to communicate. There are two ways of 
-> sending and sending&receiving message to distiguish query and command lines.
+> sending and sending&receiving message to distinguish query and command lines.
 
 ```python
 class Communication:
@@ -200,7 +200,7 @@ class Communication:
         logger.debug(f'{received_message} has been received from Delta!')
         return received_message
 ```
-> All related functions and their commends implemented for all classes
+> All related functions and their commends implemented for all classes.
 
 ```python
 class GeneralInstructions(Communication):

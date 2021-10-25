@@ -39,20 +39,46 @@ import time
 ```
 
 ```python
-IPV4 = '0.0.0.0' # IP Address of the power supply, can be obtain the device itself.
+# IP Address of the power supply, can be obtain the device itself.
+IPV4 = '0.0.0.0' 
 
-#SM15K.activateDebugLogger = True # To activate debugging option. Creates systemlog file and logs everything
-SM15K.activateDebugLogger = False # To deactivate debugging option. Creates systemlog file and logs everything
+# To activate debugging option. Creates systemlog file and logs there
+#SM15K.activateDebugLogger = True 
+
+# To deactivate debugging option. Creates systemlog file and logs there
+SM15K.activateDebugLogger = False 
 
 ColorPrint = SM15K.ColorPrinter()
-Watchdog = SM15K.WatchdogOperation(IPV4, timer=5000, sleeptime=4)                               # Be sure timer is higher than sleeptime of the thread
-BasicDatalogger = SM15K.BasicDataloggerOperation(IPV4, loggingTime=10, printColor= 'purple')    # Default color is green, available colors are: purple, blue, cyan, green, yellow, red and normal
-AhDatalogger = SM15K.AhDataloggerOperation(IPV4, loggingTime=10, printColor= 'red')             # Default color is green, available colors are: purple, blue, cyan, green, yellow, red and normal
-WhDatalogger = SM15K.WhDataloggerOperation(IPV4, loggingTime=5, printColor='blue')              # Default color is green, available colors are: purple, blue, cyan, green, yellow, red and normal
-Charging = SM15K.ChargingOperation(IPV4, sleeptime=5, bulkCurrent=100, bulkVoltage= 14.5, floatVoltage=13.8, floatTime=300 )
-Discharging = SM15K.DischargingOperation(IPV4, sleeptime=5, dischargeCurrent=100, dischargeVoltage=10.5, cutoffCurrent=2)
-Cycling = SM15K.CyclingOperation(IPV4, sleeptime=5, cycletime=10, bulkCurrent=100, bulkVoltage=14.5, floatVoltage=13.8, floatTime=300,
-                       dischargeCurrent=100, dischargeVoltage=10.5, cutoffCurrent=2, restTime=30)
+
+#Be sure Watchdog timer is higher than sleeptime of the thread
+Watchdog = SM15K.WatchdogOperation(IPV4, timer=5000, sleeptime=4)  
+
+# Default color is green, available colors are;
+# purple, blue, cyan, green, yellow, red and normal                            
+BasicDatalogger = SM15K.BasicDataloggerOperation(IPV4, loggingTime=10,
+                printColor= 'purple')    
+                
+# Default color is green, available colors are;
+# purple, blue, cyan, green, yellow, red and normal 
+AhDatalogger = SM15K.AhDataloggerOperation(IPV4, loggingTime=10, 
+                printColor= 'red')
+ 
+# Default color is green, available colors are;
+# purple, blue, cyan, green, yellow, red and normal            
+WhDatalogger = SM15K.WhDataloggerOperation(IPV4, loggingTime=5, 
+                printColor='blue')  
+                            
+Charging = SM15K.ChargingOperation(IPV4, sleeptime=5, bulkCurrent=100, 
+                bulkVoltage= 14.5, floatVoltage=13.8, floatTime=300)
+                
+Discharging = SM15K.DischargingOperation(IPV4, sleeptime=5, 
+                dischargeCurrent=100, dischargeVoltage=10.5, 
+                cutoffCurrent=2)
+                
+Cycling = SM15K.CyclingOperation(IPV4, sleeptime=5, cycletime=10, 
+                bulkCurrent=100, bulkVoltage=14.5, floatVoltage=13.8, 
+                floatTime=300, dischargeCurrent=100, 
+                dischargeVoltage=10.5, cutoffCurrent=2, restTime=30)
 ```
 > Each functionality has been created with related parameters at above.  
 > To be able to use them ```python object.start()``` must be used to start the thread operation
@@ -79,7 +105,7 @@ __Note__: Watchdog is being set to delta itself, that is why be sure timer is bi
 while True:
     # Main Code Runs Here in infinity loop.
     time.sleep(30)
-    print('Main loop runs in here! You can set sleep time or not, all threads are going to run when their sleep time is done!')
+    print(f'Main loop runs in here!')
 ```
 > You can run anything you want here as well to have multifunctional operation while system runs with multiple threads.
 >
@@ -91,4 +117,3 @@ threads are going to stop operation. That is why you should keep them in infinit
 © 2021 Yusuf Keklik
 
 This repository is licensed under the MIT license. See [LICENSE](https://github.com/keklikyusuf/DeltaElektronika/blob/main/LICENSE) for details.
-

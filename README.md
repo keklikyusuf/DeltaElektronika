@@ -68,13 +68,17 @@ Cycling.start()         # To start Cycling thread class
 > After calling thread start, if main loop ends, thread is going to end as well
 > because of being deamong thread true. That is why infinity loop or long term loop needed to run.
 > Or it can be used as thread.join() to be sure that main does not end before the thread is done.
+__Note__: Do not operate charging and discharging threads at the same operation.
+__Note__: Do not operate Ah and Wh datalogger threads at the same operation. Delta can log one of them at a time.
+__Note__: Watchdog is being set to delta itself, that is why be sure timer is bigger than sleep time to have healty operation.
+
 ```python
 while True:
     # Main Code Runs Here in infinity loop.
     time.sleep(30)
     print('Main loop runs in here! You can set sleep time or not, all threads are going to run when their sleep time is done!')
 ```
-> You can run anything you want here as well to have multifunctional operation while system runs with multiple functionalities.
+> You can run anything you want here as well to have multifunctional operation while system runs with multiple threads.
 >
 __Note__: All threads are created as deamon thread which means, if main finishes its operation
 threads are going to stop operation. That is why you should keep them in infinite loop.

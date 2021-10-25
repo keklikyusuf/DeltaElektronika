@@ -90,4 +90,5 @@ threads are going to stop operation. That is why you should keep them in infinit
 
 © 2021 Yusuf Keklik
 
-This repository is licensed under the MIT license. See LICENSE for details.
+This repository is licensed under the MIT license. See [LICENSE](https://github.com/keklikyusuf/DeltaElektronika/blob/main/LICENSE) for details.
+

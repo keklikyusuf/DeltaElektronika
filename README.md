@@ -1,5 +1,3 @@
-![logo2](https://user-images.githubusercontent.com/33743193/122555900-2bb71a00-d03b-11eb-8b01-92e194bd4d86.png)
-
 ## Delta Elektronika SM15K Power Supply
 
 This is a created package for functional operation of SM15K.

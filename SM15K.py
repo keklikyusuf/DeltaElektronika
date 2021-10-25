@@ -38,6 +38,22 @@ else:
 
 
 class ColorPrinter:
+    """
+        Colorfull Terminal Printing
+        -----------------------------------------------------------------------------------------------------------------
+        It creates date and time stamp for debugging purpuses.
+        -----------------------------------------------------------------------------------------------------------------
+        printError: To print error message to terminal. Color is RED
+        -----------------------------------------------------------------------------------------------------------------
+        printFeedback: To print feedback message to terminal. Color is GREEN
+        -----------------------------------------------------------------------------------------------------------------
+        printComment: To print comment message to terminal. Color is BLUE
+        -----------------------------------------------------------------------------------------------------------------
+        printNormal: To print normal message to terminal. Color is GRAY
+        -----------------------------------------------------------------------------------------------------------------
+        printColorful: To print any message to terminal. Color is variable (purple, blue, cyan, green, yellow, red, normal).
+        -----------------------------------------------------------------------------------------------------------------
+    """
     purple = '\033[95m'
     blue = '\033[94m'
     cyan = '\033[96m'
@@ -45,6 +61,7 @@ class ColorPrinter:
     yellow = '\033[93m'
     red = '\033[91m'
     normal = '\033[0m'
+
 
     def __init__(self):
         self.spacer = '------------------------------------------------------------------------------------'
@@ -850,9 +867,24 @@ class OutputSubsystem(Communication):
 
 
 class ShutdownOperation(Communication):
+    """
+        Shutdown Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        ShutdownOperation(IPV4).limitShutdownValues() -> limits all limit set points (voltage, current and power) to zero.
+        -----------------------------------------------------------------------------------------------------------------
+        ShutdownOperation(IPV4).setShutdownValues() -> Sets all set points (voltage, current and power) to zero.
+        -----------------------------------------------------------------------------------------------------------------
+        ShutdownOperation(IPV4).setShutdownOutput() -> Sets the output to zero.
+        -----------------------------------------------------------------------------------------------------------------
+    """
 
     def __init__(self, IPV4):
         super().__init__(IPV4)
+
+    def __str__(self):
+        return f'Shutdown Operation, for details print object.__doc__'
 
     def limitShutdownValues(self):
         SystemSubsystem(self.IPV4).SetVoltageLimit(0, 'ON')
@@ -886,7 +918,9 @@ class ShutdownOperation(Communication):
 
 class WatchdogOperation(threading.Thread):
     """
-        This is a created thread for Watchdog Operation
+        Watchdog Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
         -----------------------------------------------------------------------------------------------------------------
         Timer: It is the set point for the watchdog operation, if watchdog time cannot be triggered withing this time
         period, it will switch of the output of the delta for safety.
@@ -896,6 +930,7 @@ class WatchdogOperation(threading.Thread):
         Be careful while setting it that timer is higher than sleep time for proper operation.
         -----------------------------------------------------------------------------------------------------------------
         If device fails with watch operation, it must be resetted manualy for safety reasons.
+        -----------------------------------------------------------------------------------------------------------------
     """
 
     def __init__(self, IPV4, timer, sleeptime, deamonState=True):
@@ -908,7 +943,7 @@ class WatchdogOperation(threading.Thread):
         self.setDaemon(self.deamonState)
 
     def __str__(self):
-        return f'This is created to have watchdog operation for Delta Power Supply'
+        return f'Watchdog Operation, for details print object.__doc__'
 
     def stop(self):
         logger.debug("Stop watchdog thread has been called!")
@@ -933,7 +968,19 @@ class WatchdogOperation(threading.Thread):
 
 class BasicDataloggerOperation(threading.Thread):
     """
-    It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
+        Basic Datalogger Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        Its own class attribute dataframe is; dataFrameBasic = ['Voltage', 'Current', 'Power']
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        loggingTime: It is also same with sleep time of the thread. Function will work at every logging time
+        -----------------------------------------------------------------------------------------------------------------
+        printColor: It is used for optional color printing for the logged data at terminal. Default color is green.
+        Note: Available colors are, purple, blue, cyan, green, yellow, red and normal
+        -----------------------------------------------------------------------------------------------------------------
+        There are three main logger types, be sure that one of them is being used only!
+        -----------------------------------------------------------------------------------------------------------------
     """
     dataFrameBasic = ['Voltage', 'Current', 'Power']
     fileName = 'BasicDatalogger'
@@ -949,6 +996,9 @@ class BasicDataloggerOperation(threading.Thread):
         self.finalName = f'{BasicDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
         BasicDataloggerOperation.dataFrameBasic.insert(0, 'Timestamp')
+
+    def __str__(self):
+        return f'Basic Datalogger Operation, for details print object.__doc__'
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
@@ -986,7 +1036,19 @@ class BasicDataloggerOperation(threading.Thread):
 
 class AhDataloggerOperation(threading.Thread):
     """
-    It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
+        Ah Datalogger Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        Its own class attribute dataframe is; dataFrameAh = ['Voltage', 'Current', 'Power', 'PositiveAh', 'NegativeAh', 'AhSeconds', 'AhHours']
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        loggingTime: It is also same with sleep time of the thread. Function will work at every logging time
+        -----------------------------------------------------------------------------------------------------------------
+        printColor: It is used for optional color printing for the logged data at terminal. Default color is green.
+        Note: Available colors are, purple, blue, cyan, green, yellow, red and normal
+        -----------------------------------------------------------------------------------------------------------------
+        There are three main logger types, be sure that one of them is being used only especially Ah vs Wh!
+        -----------------------------------------------------------------------------------------------------------------
     """
     dataFrameAh = ['Voltage', 'Current', 'Power', 'PositiveAh', 'NegativeAh', 'AhSeconds', 'AhHours']
     fileName = 'AhDatalogger'
@@ -1002,6 +1064,9 @@ class AhDataloggerOperation(threading.Thread):
         self.finalName = f'{AhDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
         AhDataloggerOperation.dataFrameAh.insert(0, 'Timestamp')
+
+    def __str__(self):
+        return f'Ah Datalogger Operation, for details print object.__doc__'
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
@@ -1048,7 +1113,19 @@ class AhDataloggerOperation(threading.Thread):
 
 class WhDataloggerOperation(threading.Thread):
     """
-    It has been created to log CSV data type into TXT. Data can be adjusted according to user desire!
+        Ah Datalogger Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        Its own class attribute dataframe is; dataFrameWh = ['Voltage', 'Current', 'Power', 'PositiveWh', 'NegativeWh', 'WhSeconds', 'WhHours']
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        loggingTime: It is also same with sleep time of the thread. Function will work at every logging time
+        -----------------------------------------------------------------------------------------------------------------
+        printColor: It is used for optional color printing for the logged data at terminal. Default color is green.
+        Note: Available colors are, purple, blue, cyan, green, yellow, red and normal
+        -----------------------------------------------------------------------------------------------------------------
+        There are three main logger types, be sure that one of them is being used only especially Ah vs Wh!
+        -----------------------------------------------------------------------------------------------------------------
     """
     dataFrameWh = ['Voltage', 'Current', 'Power', 'PositiveWh', 'NegativeWh', 'WhSeconds', 'WhHours']
     fileName = 'WhDatalogger'
@@ -1064,6 +1141,9 @@ class WhDataloggerOperation(threading.Thread):
         self.finalName = f'{WhDataloggerOperation.fileName} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.txt'
         open(f'{self.finalName}', "w+").close()
         WhDataloggerOperation.dataFrameWh.insert(0, 'Timestamp')
+
+    def __str__(self):
+        return f'Wh Datalogger Operation, for details print object.__doc__'
 
     def csvLogger(self):
         csvFile = open(self.finalName, 'a', newline='')
@@ -1110,7 +1190,28 @@ class WhDataloggerOperation(threading.Thread):
 
 class ChargingOperation(threading.Thread):
     """
-    It has been created to run charging operation according to users desires!
+        Charging Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        sleeptime: Sleep time of the thread, every sleep time, charging state is being checked.
+        -----------------------------------------------------------------------------------------------------------------
+        bulkCurrent: Current setting for the bulk stage
+        -----------------------------------------------------------------------------------------------------------------
+        bulkVoltage: Voltage setting for the bulk stage
+        -----------------------------------------------------------------------------------------------------------------
+        absorptionCurrent: Current setting for the absorption stage, absorptionCurrent = 0.8 * bulkCurrent
+        -----------------------------------------------------------------------------------------------------------------
+        absorptionVoltage: Voltage setting for the absorption stage, absorptionVoltage = bulkVoltage
+        -----------------------------------------------------------------------------------------------------------------
+        floatCurrent: Current setting for the floating stage, floatCurrent =  0.02 * bulkCurrent
+        -----------------------------------------------------------------------------------------------------------------
+        floatVoltage: Voltage setting for the floating stage
+        -----------------------------------------------------------------------------------------------------------------
+        floatTime: Time setting for the floating stage timer, when it is done charging operion stops!
+        -----------------------------------------------------------------------------------------------------------------
+        There are three main logger types, be sure that one of them is being used only especially Ah vs Wh!
+        -----------------------------------------------------------------------------------------------------------------
     """
 
     def __init__(self,IPV4='0.0.0.0', sleeptime=10, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0, floatTime= 0.0, deamonState=True):
@@ -1130,6 +1231,9 @@ class ChargingOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
+
+    def __str__(self):
+        return f'Charging Operation, for details print object.__doc__'
 
     def chargerInitialize(self):
         logger.debug('Charger is being initialized!')
@@ -1220,7 +1324,18 @@ class ChargingOperation(threading.Thread):
 
 class DischargingOperation(threading.Thread):
     """
-    It has been created to run discharging operation according to users desires!
+        Discharging Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        sleeptime: Sleep time of the thread, every sleep time, charging state is being checked.
+        -----------------------------------------------------------------------------------------------------------------
+        dischargeCurrent: Maximum discharging current set
+        -----------------------------------------------------------------------------------------------------------------
+        dischargeVoltage: Minimum voltage that battery can be discharged
+        -----------------------------------------------------------------------------------------------------------------
+        cutoffCurrent: Minimum current to decide stop discharging operation
+        -----------------------------------------------------------------------------------------------------------------
     """
 
     def __init__(self, IPV4='0.0.0.0', sleeptime=10, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, deamonState=True):
@@ -1233,6 +1348,9 @@ class DischargingOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
+
+    def __str__(self):
+        return f'Dischargin Operation, for details print object.__doc__'
 
     def dischargerInitialize(self):
         logger.debug('Discharger is being initialized!')
@@ -1293,7 +1411,38 @@ class DischargingOperation(threading.Thread):
 
 class CyclingOperation(threading.Thread):
     """
-        It has been created to run battery cycling operation according to users desires!
+        Charging Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        sleeptime: Sleep time of the thread, every sleep time, charging state is being checked.
+        -----------------------------------------------------------------------------------------------------------------
+        cycletime: Total number of cyling the battery, charging and discharing it counts as one cycling!
+        -----------------------------------------------------------------------------------------------------------------
+        bulkCurrent: Current setting for the bulk stage
+        -----------------------------------------------------------------------------------------------------------------
+        bulkVoltage: Voltage setting for the bulk stage
+        -----------------------------------------------------------------------------------------------------------------
+        absorptionCurrent: Current setting for the absorption stage, absorptionCurrent = 0.8 * bulkCurrent
+        -----------------------------------------------------------------------------------------------------------------
+        absorptionVoltage: Voltage setting for the absorption stage, absorptionVoltage = bulkVoltage
+        -----------------------------------------------------------------------------------------------------------------
+        floatCurrent: Current setting for the floating stage, floatCurrent =  0.02 * bulkCurrent
+        -----------------------------------------------------------------------------------------------------------------
+        floatVoltage: Voltage setting for the floating stage
+        -----------------------------------------------------------------------------------------------------------------
+        floatTime: Time setting for the floating stage timer, when it is done charging operion stops!
+        -----------------------------------------------------------------------------------------------------------------
+        dischargeCurrent: Maximum discharging current set
+        -----------------------------------------------------------------------------------------------------------------
+        dischargeVoltage: Minimum voltage that battery can be discharged
+        -----------------------------------------------------------------------------------------------------------------
+        cutoffCurrent: Minimum current to decide stop discharging operation
+        -----------------------------------------------------------------------------------------------------------------
+        restTime: Timer to decide test time between charging to discharging operation
+        -----------------------------------------------------------------------------------------------------------------
+        There are three main logger types, be sure that one of them is being used only especially Ah vs Wh!
+        -----------------------------------------------------------------------------------------------------------------
     """
     def __init__(self, IPV4='0.0.0.0', sleeptime=10, cycletime = 0, bulkCurrent = 0.0, bulkVoltage = 0.0, floatVoltage = 0.0,
                  floatTime = 0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, restTime = 30.0, deamonState=True):
@@ -1303,7 +1452,7 @@ class CyclingOperation(threading.Thread):
         self.cycletime = cycletime
         self.bulkCurrent = bulkCurrent
         self.bulkVoltage = bulkVoltage
-        self.absorptionCurrent = self.bulkCurrent * 0.9
+        self.absorptionCurrent = self.bulkCurrent * 0.8
         self.absorptionVoltage = self.bulkVoltage
         self.floatCurrent = self.bulkCurrent * 0.01
         self.floatVoltage = floatVoltage
@@ -1323,6 +1472,9 @@ class CyclingOperation(threading.Thread):
         self.counter = 0
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
+
+    def __str__(self):
+        return f'Cycling Operation, for details print object.__doc__'
 
     def chargerInitialize(self):
         logger.debug('Charger is being initialized!')
@@ -1468,10 +1620,45 @@ class CyclingOperation(threading.Thread):
 
 
 class TestOperations:
+    """
+        Charging Functional Operation
+        -----------------------------------------------------------------------------------------------------------------
+        IPV4: Address of the desired device to start shutdown operation
+        -----------------------------------------------------------------------------------------------------------------
+        testGeneralInstructions: General Instructions class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testSourceSubsystem: Source Subsystem class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testMeasureSubsystem: Measure Subsystem class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testSystemSubsystem: System Subsystem class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testOutputSubsystem: Output Subsystem class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testWatchdogOperation: Watchdog Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testShutdownOperation: Shutdown Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testBasicDataloggerOperation: Basic Datalogger Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testAhDataloggerOperation: Ah Datalogger Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testWhDataloggerOperation: Wh Datalogger Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testChargerOperation: Charging Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testDischargerOperation: Discharging Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+        testCyclingOperation: Cycling Operation class tester.
+        -----------------------------------------------------------------------------------------------------------------
+    """
 
     def __init__(self, IPV4):
         self.IPV4 = IPV4
         logger.debug("Test operations has been created!")
+
+    def __str__(self):
+        return f'Testing Operations, for details print object.__doc__'
 
     def testGeneralInstructions(self):
         logger.debug("General Instructions test runs!")

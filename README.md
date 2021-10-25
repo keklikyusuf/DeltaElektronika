@@ -70,7 +70,9 @@ Cycling.start()         # To start Cycling thread class
 > Or it can be used as thread.join() to be sure that main does not end before the thread is done.
 
 __Note__: Do not operate charging and discharging threads at the same operation.
+
 __Note__: Do not operate Ah and Wh datalogger threads at the same operation. Delta can log one of them at a time.
+
 __Note__: Watchdog is being set to delta itself, that is why be sure timer is bigger than sleep time to have healty operation.
 
 ```python

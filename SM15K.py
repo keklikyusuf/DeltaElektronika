@@ -5,7 +5,7 @@
 # Delta Elektronika SM15K Communication Socket Library.
 #
 # Revision: @keklikyusuf
-# 0.0.2: Initial version
+# 0.0.4: Initial version
 
 
 import socket
@@ -18,7 +18,7 @@ import logging
 
 """ Module to handle communication with DELTA POWER SUPPLY  """
 
-__version__ = "0.0.2"  # semVersion (Major.Minor.Revision)
+__version__ = "0.0.4"  # semVersion (Major.Minor.Revision)
 
 
 filename = 'systemlog'
@@ -737,8 +737,8 @@ class SystemSubsystem(Communication):
     def ReadWarnings(self, ReadWarnings="SYSTem:WARning?\n"):
         return self.sendReceiveMessage(ReadWarnings)
 
-    def SetWatchdog(self, time):
-        message = f'SYSTem:COMmunicate:WATchdog SET,{time}\n'
+    def SetWatchdog(self, timer):
+        message = f'SYSTem:COMmunicate:WATchdog SET,{timer}\n'
         self.sendMessage(message)
 
     def ReadWatchdogSet(self, ReadWatchdogSet="SYSTem:COMmunicate:WATchdog SET?\n"):
@@ -1041,7 +1041,7 @@ class AhDataloggerOperation(threading.Thread):
         while not self._stop_event.is_set():
             logger.debug('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
-            AhDataloggerOperation.updateAhDataFrame()
+            self.updateAhDataFrame()
             time.sleep(self.loggingTime)
         logger.debug('Datalogger thread class has been stopped!')
 
@@ -1103,7 +1103,7 @@ class WhDataloggerOperation(threading.Thread):
         while not self._stop_event.is_set():
             logger.debug('Datalogger thread class for basic dataframe is running!')
             self.csvLogger()
-            WhDataloggerOperation.updateWhDataFrame()
+            self.updateWhDataFrame()
             time.sleep(self.loggingTime)
         logger.debug('Datalogger thread class has been stopped!')
 
@@ -1455,7 +1455,7 @@ class CyclingOperation(threading.Thread):
                     cprint.printFeedback('Discharging mode initialized!')
                     self.dischargerInitialize()
                     self.dischargerStage()
-                    CyclingOperation.outputInitialize()
+                    self.outputInitialize()
                     self.dischargingInitializeMode = False
                     self.dischargingMode = True
                 elif self.dischargingMode:
@@ -1513,11 +1513,12 @@ class TestOperations:
         Watchdog = WatchdogOperation(IPV4, timer, sleeptime)
         Watchdog.start()
 
-    def testShutdownOperation(self):
+    def testShutdownOperation(self, IPV4):
         logger.debug("Shutdown opreation test runs!")
-        ShutdownOperation.limitShutdownValues()
-        ShutdownOperation.setShutdownValues()
-        ShutdownOperation.setShutdownOutput()
+        Shutdown = ShutdownOperation(IPV4)
+        Shutdown.limitShutdownValues()
+        Shutdown.setShutdownValues()
+        Shutdown.setShutdownOutput()
 
     def testBasicDataloggerOperation(self, IPV4, loggingtime):
         logger.debug("Basic Datalogger opreation test runs!")
@@ -1554,5 +1555,4 @@ class TestOperations:
 
 if __name__ == '__main__':
     pass
-
 

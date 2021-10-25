@@ -20,19 +20,19 @@ import logging
 
 __version__ = "0.0.5"  # semVersion (Major.Minor.Revision)
 
-
 filename = 'systemlog'
 finalName = f'{filename} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.log'
 
 activateDebugLogger = False
 if activateDebugLogger:
-    logging.basicConfig(filename=finalName, level=logging.DEBUG, format='%(asctime)s | %(name)s | %(levelname)s:%(message)s'
-                                '\n-----------------------------------------------------------------------------------------------')
+    logging.basicConfig(filename=finalName, level=logging.DEBUG,
+                        format='%(asctime)s | %(name)s | %(levelname)s:%(message)s'
+                               '\n-----------------------------------------------------------------------------------------------')
     logger = logging.getLogger(__name__)
     logger.propagate = activateDebugLogger
 else:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s | %(name)s | %(levelname)s:%(message)s'
-                               '\n-----------------------------------------------------------------------------------------------')
+                                                    '\n-----------------------------------------------------------------------------------------------')
     logger = logging.getLogger(__name__)
     logger.propagate = False
 
@@ -61,7 +61,6 @@ class ColorPrinter:
     yellow = '\033[93m'
     red = '\033[91m'
     normal = '\033[0m'
-
 
     def __init__(self):
         self.spacer = '------------------------------------------------------------------------------------'
@@ -114,20 +113,38 @@ class ColorPrinter:
         print(text)
         return text
 
-    def printColorful(self, message, colour='red'):
+    def printColorful(self, message, colour='green'):
         """
-            :param colour:
+            :param colour: type available colors as string!
             :param message: Text message that wanted to be printed
             :return: This function returns to printed text message
             Any message is being printed with defined stamp to create functional colorful printing
         """
-        sys.stdout.write(f'{ColorPrinter}.{colour}')
+        if colour == 'purple':
+            sys.stdout.write(ColorPrinter.purple)
+        elif colour == 'blue':
+            sys.stdout.write(ColorPrinter.blue)
+        elif colour == 'cyan':
+            sys.stdout.write(ColorPrinter.cyan)
+        elif colour == 'green':
+            sys.stdout.write(ColorPrinter.green)
+        elif colour == 'red':
+            sys.stdout.write(ColorPrinter.red)
+        elif colour == 'yellow':
+            sys.stdout.write(ColorPrinter.yellow)
+        elif colour == 'normal':
+            sys.stdout.write(ColorPrinter.normal)
+        else:
+            logger.debug("Color is defined wrong! Default color is used!")
+            sys.stdout.write(ColorPrinter.green)
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
         return text
 
+
 cprint = ColorPrinter()
+
 
 class Communication:
     """
@@ -1170,7 +1187,8 @@ class WhDataloggerOperation(threading.Thread):
             f'Voltage: {WhDataloggerOperation.dataFrameWh[1]}V, Current: {WhDataloggerOperation.dataFrameWh[2]}A, '
             f'Power: {WhDataloggerOperation.dataFrameWh[3]}W, PositiveWh: {WhDataloggerOperation.dataFrameWh[4]}, '
             f'NegativeWh: {WhDataloggerOperation.dataFrameWh[5]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}, '
-            f'WhSeconds: {WhDataloggerOperation.dataFrameWh[7]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}', self.printColor)
+            f'WhSeconds: {WhDataloggerOperation.dataFrameWh[7]}, WhHours: {WhDataloggerOperation.dataFrameWh[6]}',
+            self.printColor)
         return WhDataloggerOperation.dataFrameWh
 
     def stop(self):
@@ -1214,7 +1232,8 @@ class ChargingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
     """
 
-    def __init__(self,IPV4='0.0.0.0', sleeptime=10, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0, floatTime= 0.0, deamonState=True):
+    def __init__(self, IPV4='0.0.0.0', sleeptime=10, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0, floatTime=0.0,
+                 deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
         self.sleeptime = sleeptime
@@ -1338,7 +1357,8 @@ class DischargingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
     """
 
-    def __init__(self, IPV4='0.0.0.0', sleeptime=10, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, deamonState=True):
+    def __init__(self, IPV4='0.0.0.0', sleeptime=10, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0,
+                 deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
         self.sleeptime = sleeptime
@@ -1444,8 +1464,10 @@ class CyclingOperation(threading.Thread):
         There are three main logger types, be sure that one of them is being used only especially Ah vs Wh!
         -----------------------------------------------------------------------------------------------------------------
     """
-    def __init__(self, IPV4='0.0.0.0', sleeptime=10, cycletime = 0, bulkCurrent = 0.0, bulkVoltage = 0.0, floatVoltage = 0.0,
-                 floatTime = 0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, restTime = 30.0, deamonState=True):
+
+    def __init__(self, IPV4='0.0.0.0', sleeptime=10, cycletime=0, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0,
+                 floatTime=0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, restTime=30.0,
+                 deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
         self.sleeptime = sleeptime
@@ -1717,7 +1739,7 @@ class TestOperations:
         AhDatalogger = AhDataloggerOperation(self.IPV4, loggingtime)
         AhDatalogger.start()
 
-    def testWhDataloggerOperation(self,  loggingtime):
+    def testWhDataloggerOperation(self, loggingtime):
         logger.debug("Wh Datalogger opreation test runs!")
         WhDatalogger = WhDataloggerOperation(self.IPV4, loggingtime)
         WhDatalogger.start()
@@ -1733,13 +1755,12 @@ class TestOperations:
         Discharger.start()
 
     def testCyclingOperation(self, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage,
-                               floatTime, dischargeCurrent, dischargeVoltage, cutoffCurrent=-2 ):
+                             floatTime, dischargeCurrent, dischargeVoltage, cutoffCurrent=-2):
         logger.debug("Discharging opreation test runs!")
         Cycler = CyclingOperation(self.IPV4, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage, floatTime,
-                                   dischargeCurrent, dischargeVoltage, cutoffCurrent)
+                                  dischargeCurrent, dischargeVoltage, cutoffCurrent)
         Cycler.start()
 
 
 if __name__ == '__main__':
     pass
-

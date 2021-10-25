@@ -18,7 +18,7 @@ import logging
 
 """ Module to handle communication with DELTA POWER SUPPLY  """
 
-__version__ = "0.0.4"  # semVersion (Major.Minor.Revision)
+__version__ = "0.0.5"  # semVersion (Major.Minor.Revision)
 
 
 filename = 'systemlog'

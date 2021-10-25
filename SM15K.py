@@ -1508,47 +1508,47 @@ class TestOperations:
         OutputComments.TestOutputSubsystem()
         logger.debug("Output Subsystem test finished!")
 
-    def testWatchdogOperation(self, IPV4, timer, sleeptime):
+    def testWatchdogOperation(self, timer, sleeptime):
         logger.debug("Watchdog opreation test runs!")
-        Watchdog = WatchdogOperation(IPV4, timer, sleeptime)
+        Watchdog = WatchdogOperation(self.IPV4, timer, sleeptime)
         Watchdog.start()
 
-    def testShutdownOperation(self, IPV4):
+    def testShutdownOperation(self):
         logger.debug("Shutdown opreation test runs!")
-        Shutdown = ShutdownOperation(IPV4)
+        Shutdown = ShutdownOperation(self.IPV4)
         Shutdown.limitShutdownValues()
         Shutdown.setShutdownValues()
         Shutdown.setShutdownOutput()
 
-    def testBasicDataloggerOperation(self, IPV4, loggingtime):
+    def testBasicDataloggerOperation(self, loggingtime):
         logger.debug("Basic Datalogger opreation test runs!")
-        BasicDatalogger = BasicDataloggerOperation(IPV4, loggingtime)
+        BasicDatalogger = BasicDataloggerOperation(self.IPV4, loggingtime)
         BasicDatalogger.start()
 
-    def testAhDataloggerOperation(self, IPV4, loggingtime):
+    def testAhDataloggerOperation(self, loggingtime):
         logger.debug("Ah Datalogger opreation test runs!")
-        AhDatalogger = AhDataloggerOperation(IPV4, loggingtime)
+        AhDatalogger = AhDataloggerOperation(self.IPV4, loggingtime)
         AhDatalogger.start()
 
-    def testWhDataloggerOperation(self, IPV4,  loggingtime):
+    def testWhDataloggerOperation(self,  loggingtime):
         logger.debug("Wh Datalogger opreation test runs!")
-        WhDatalogger = WhDataloggerOperation(IPV4, loggingtime)
+        WhDatalogger = WhDataloggerOperation(self.IPV4, loggingtime)
         WhDatalogger.start()
 
-    def testChargerOperation(self, IPV4, sleeptime, bulkCurrent, bulkVoltage, floatVoltage):
+    def testChargerOperation(self, sleeptime, bulkCurrent, bulkVoltage, floatVoltage):
         logger.debug("Charging opreation test runs!")
-        Charger = ChargingOperation(IPV4, sleeptime, bulkCurrent, bulkVoltage, floatVoltage)
+        Charger = ChargingOperation(self.IPV4, sleeptime, bulkCurrent, bulkVoltage, floatVoltage)
         Charger.start()
 
-    def testDischargerOperation(self, IPV4, sleeptime, voltageset, currentset, cufoffcurrentset):
+    def testDischargerOperation(self, sleeptime, voltageset, currentset, cufoffcurrentset):
         logger.debug("Discharging opreation test runs!")
-        Discharger = DischargingOperation(IPV4, sleeptime, voltageset, currentset, cufoffcurrentset)
+        Discharger = DischargingOperation(self.IPV4, sleeptime, voltageset, currentset, cufoffcurrentset)
         Discharger.start()
 
-    def testCyclingOperation(self, IPV4, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage,
+    def testCyclingOperation(self, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage,
                                floatTime, dischargeCurrent, dischargeVoltage, cutoffCurrent=-2 ):
         logger.debug("Discharging opreation test runs!")
-        Cycler = CyclingOperation(IPV4, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage, floatTime,
+        Cycler = CyclingOperation(self.IPV4, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage, floatTime,
                                    dischargeCurrent, dischargeVoltage, cutoffCurrent)
         Cycler.start()
 

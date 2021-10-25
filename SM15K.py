@@ -1623,6 +1623,7 @@ class CyclingOperation(threading.Thread):
                     self.chargingInitializeMode = False
                     self.chargingMode = True
                 elif self.chargingMode:
+                    cprint.printFeedback('Charger mode is running!')
                     time.sleep(self.sleeptime)
                     self.checkChargingStage()
                 elif self.dischargingInitializeMode:
@@ -1633,6 +1634,7 @@ class CyclingOperation(threading.Thread):
                     self.dischargingInitializeMode = False
                     self.dischargingMode = True
                 elif self.dischargingMode:
+                    cprint.printFeedback('Discharger mode is running!')
                     time.sleep(self.sleeptime)
                     self.checkDischargingStage()
             else:

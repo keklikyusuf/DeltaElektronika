@@ -1445,7 +1445,7 @@ class CyclingOperation(threading.Thread):
                     cprint.printFeedback('Charger mode initialized!')
                     self.chargerInitialize()
                     self.bulkStage()
-                    CyclingOperation().outputInitialize()
+                    self.outputInitialize()
                     self.chargingInitializeMode = False
                     self.chargingMode = True
                 elif self.chargingMode:

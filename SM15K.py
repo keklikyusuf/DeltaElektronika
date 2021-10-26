@@ -1257,7 +1257,7 @@ class ChargingOperation(threading.Thread):
     def chargerInitialize(self):
         logger.debug('Charger is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
-        SystemSubsystem(self.IPV4).SetVoltageLimit(self.bulkVoltage + 0.5, 'ON')
+        SystemSubsystem(self.IPV4).SetVoltageLimit(self.bulkVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetCurrentLimit(self.bulkCurrent + 10, 'ON')
         SystemSubsystem(self.IPV4).ReadCurrentLimitSet()
@@ -1375,7 +1375,7 @@ class DischargingOperation(threading.Thread):
     def dischargerInitialize(self):
         logger.debug('Discharger is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
-        SystemSubsystem(self.IPV4).SetVoltageLimit(self.dischargeVoltage + 0.5, 'ON')
+        SystemSubsystem(self.IPV4).SetVoltageLimit(self.dischargeVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetNegativeCurrentLimit(self.dischargeCurrent - 10, 'ON')
         SystemSubsystem(self.IPV4).ReadNegativeCurrentLimitSet()
@@ -1501,7 +1501,7 @@ class CyclingOperation(threading.Thread):
     def chargerInitialize(self):
         logger.debug('Charger is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
-        SystemSubsystem(self.IPV4).SetVoltageLimit(self.bulkVoltage + 0.5, 'ON')
+        SystemSubsystem(self.IPV4).SetVoltageLimit(self.bulkVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetCurrentLimit(self.bulkCurrent + 10, 'ON')
         SystemSubsystem(self.IPV4).ReadCurrentLimitSet()
@@ -1578,7 +1578,7 @@ class CyclingOperation(threading.Thread):
     def dischargerInitialize(self):
         logger.debug('Discharger is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
-        SystemSubsystem(self.IPV4).SetVoltageLimit(self.dischargeVoltage + 0.5, 'ON')
+        SystemSubsystem(self.IPV4).SetVoltageLimit(self.dischargeVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetNegativeCurrentLimit(self.dischargeCurrent - 10, 'ON')
         SystemSubsystem(self.IPV4).ReadNegativeCurrentLimitSet()

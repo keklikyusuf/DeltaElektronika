@@ -1121,7 +1121,7 @@ class AhDataloggerOperation(threading.Thread):
         logger.debug('Datalogger thread class has been started!')
         MeasureSubsystem(self.IPV4).SetAhMeasurementState('ON')
         while not self._stop_event.is_set():
-            logger.debug('Datalogger thread class for basic dataframe is running!')
+            logger.debug('Datalogger thread class for Ah dataframe is running!')
             self.csvLogger()
             self.updateAhDataFrame()
             time.sleep(self.loggingTime)
@@ -1199,7 +1199,7 @@ class WhDataloggerOperation(threading.Thread):
         logger.debug('Datalogger thread class has been started!')
         MeasureSubsystem(self.IPV4).SetWhMeasurementState('ON')
         while not self._stop_event.is_set():
-            logger.debug('Datalogger thread class for basic dataframe is running!')
+            logger.debug('Datalogger thread class for Wh dataframe is running!')
             self.csvLogger()
             self.updateWhDataFrame()
             time.sleep(self.loggingTime)

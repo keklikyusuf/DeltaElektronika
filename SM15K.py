@@ -18,7 +18,7 @@ import logging
 
 """ Module to handle communication with DELTA POWER SUPPLY  """
 
-__version__ = "0.0.5"  # semVersion (Major.Minor.Revision)
+__version__ = "0.0.6"  # semVersion (Major.Minor.Revision)
 
 filename = 'systemlog'
 finalName = f'{filename} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.log'

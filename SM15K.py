@@ -5,7 +5,7 @@
 # Delta Elektronika SM15K Communication Socket Library.
 #
 # Revision: @keklikyusuf
-# 0.0.4: Initial version
+# 0.0.6: Initial version
 
 
 import socket

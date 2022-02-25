@@ -5,7 +5,7 @@
 # Delta Elektronika SM15K Communication Socket Library.
 #
 # Revision: @keklikyusuf
-# 0.0.6: Initial version
+# 0.0.7: Initial version
 
 
 import socket
@@ -18,7 +18,7 @@ import logging
 
 """ Module to handle communication with DELTA POWER SUPPLY  """
 
-__version__ = "0.0.6"  # semVersion (Major.Minor.Revision)
+__version__ = "0.0.7"  # semVersion (Major.Minor.Revision)
 
 filename = 'systemlog'
 finalName = f'{filename} {datetime.datetime.now().strftime("%d_%m_%Y-%H_%M_%S")}.log'
@@ -32,7 +32,8 @@ if activateDebugLogger:
     logger.propagate = activateDebugLogger
 else:
     logging.basicConfig(level=logging.DEBUG, format='%(asctime)s | %(name)s | %(levelname)s:%(message)s'
-                                                    '\n-----------------------------------------------------------------------------------------------')
+                                                    '\n'
+                                                    '-----------------------------------------------------------------------------------------------')
     logger = logging.getLogger(__name__)
     logger.propagate = False
 
@@ -75,6 +76,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        sys.stdout.write(ColorPrinter.normal)
         return text
 
     def printFeedback(self, message):
@@ -87,6 +89,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        sys.stdout.write(ColorPrinter.normal)
         return text
 
     def printComment(self, message):
@@ -99,6 +102,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        sys.stdout.write(ColorPrinter.normal)
         return text
 
     def printNormal(self, message):
@@ -111,6 +115,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        sys.stdout.write(ColorPrinter.normal)
         return text
 
     def printColorful(self, message, colour='green'):
@@ -140,6 +145,7 @@ class ColorPrinter:
         now = datetime.datetime.now()
         text = f'{now.strftime("%d/%m/%Y - %X")}: {message} \n{self.spacer}'
         print(text)
+        sys.stdout.write(ColorPrinter.normal)
         return text
 
 
@@ -154,14 +160,8 @@ class Communication:
     buffer_size = 1024
     timeout = 10
 
-    def __init__(self, IPV4):
-        """
-        :param IPV4: Decive IP Address which must be set accordingly!
-        """
-        self.IPV4 = IPV4
-
     def __str__(self):
-        return f'This is created to be able to communicate with Delta! Connect is the father class!'
+        return f'This is created to be able to communicate with Socket!'
 
     @staticmethod
     def openSocket():
@@ -169,27 +169,29 @@ class Communication:
         communication.settimeout(Communication.timeout)
         return communication
 
-    def sendMessage(self, message):
+    @staticmethod
+    def sendMessage(IPV4, message):
         """
         :param message: Message that is going to be sent to Delta which works as command lines!
         :return: It returns the message has been sent to Delta!
         """
         send_message = bytes(message, 'utf-8')
         communication = Communication.openSocket()
-        communication.connect((self.IPV4, Communication.port_name))
+        communication.connect((IPV4, Communication.port_name))
         communication.send(send_message)
         communication.close()
         logger.debug(f'{send_message} has been sent to Delta!')
         return send_message
 
-    def sendReceiveMessage(self, message):
+    @staticmethod
+    def sendReceiveMessage(IPV4, message):
         """
         :param message: Message that is going to be sent to Delta to get back as query!
         :return: It returns the message has been received from Delta!
         """
         send_message = bytes(message, 'utf-8')
         communication = Communication.openSocket()
-        communication.connect((self.IPV4, Communication.port_name))
+        communication.connect((IPV4, Communication.port_name))
         communication.send(send_message)
         communication_message = communication.recv(Communication.buffer_size).decode('UTF-8')
         communication.close()
@@ -198,40 +200,58 @@ class Communication:
         return received_message
 
 
-class GeneralInstructions(Communication):
-    """
-    Manual: General Instruction - page 8 - Queries and Commands
-    -----------------------------------------------------------------------------------------------------------------
-    IDN = "*IDN?<term>" Read the identification string of the Delta Power Supply
-    -----------------------------------------------------------------------------------------------------------------
-    PUD = "*PUD?<term>" Read the protected user data of the Delta Power Supply
-    -----------------------------------------------------------------------------------------------------------------
-    CLS = "*CLS<term>" Clear the error queue of the Delta Power Supply
-    -----------------------------------------------------------------------------------------------------------------
-    RST = "*RST<term>" Set the power supply in a save defined state of the Delta Power Supply
-    -----------------------------------------------------------------------------------------------------------------
-    Note: All commands can be tested with 'TestGeneralInstructions Method'
-    :return Queries will return the Received Message!
-    :return Commands will return the Command has been sent!
-    """
+class SM15K:
 
     def __init__(self, IPV4):
-        super().__init__(IPV4)
+        self.IPV4 = IPV4
+        self.source = SourceSubsystem(self.IPV4)
+        self.measure = MeasureSubsystem(self.IPV4)
+        self.system = SystemSubsystem(self.IPV4)
+        self.output = OutputSubsystem(self.IPV4)
+        self.shutdown = ShutdownOperation(self.IPV4)
 
     def __str__(self):
         return f'Manual: General Instruction - page 8 - Queries and Commands, for details print object.__doc__'
 
+    """
+        Manual: General Instruction - page 8 - Queries and Commands
+        -----------------------------------------------------------------------------------------------------------------
+        IDN = "*IDN?<term>" Read the identification string of the Delta Power Supply
+        -----------------------------------------------------------------------------------------------------------------
+        PUD = "*PUD?<term>" Read the protected user data of the Delta Power Supply
+        -----------------------------------------------------------------------------------------------------------------
+        CLS = "*CLS<term>" Clear the error queue of the Delta Power Supply
+        -----------------------------------------------------------------------------------------------------------------
+        RST = "*RST<term>" Set the power supply in a save defined state of the Delta Power Supply
+        -----------------------------------------------------------------------------------------------------------------
+        Note: All commands can be tested with 'TestGeneralInstructions Method'
+        :return Queries will return the Received Message!
+        :return Commands will return the Command has been sent!
+    """
+
     def Identification(self, IDN="*IDN?\n"):
-        return self.sendReceiveMessage(IDN)
+        """
+        IDN = "*IDN?<term>" Read the identification string of the Delta Power Supply
+        """
+        return Communication().sendReceiveMessage(self.IPV4, message=IDN)
 
     def ProtectedUserData(self, PUD="*PUD?\n"):
-        return self.sendReceiveMessage(PUD)
+        """
+        PUD = "*PUD?<term>" Read the protected user data of the Delta Power Supply
+        """
+        return Communication().sendReceiveMessage(self.IPV4, message=PUD)
 
     def ClearErrorQueue(self, CLS="*CLS\n"):
-        return self.sendMessage(CLS)
+        """
+        CLS = "*CLS<term>" Clear the error queue of the Delta Power Supply
+        """
+        return Communication().sendMessage(self.IPV4, message=CLS)
 
     def ResetDefinedState(self, RST="*RST\n"):
-        return self.sendMessage(RST)
+        """
+        RST = "*RST<term>" Set the power supply in a save defined state of the Delta Power Supply
+        """
+        return Communication().sendMessage(self.IPV4, message=RST)
 
     def TestGeneralInstructions(self):
         logger.debug("Self Identification runs:")
@@ -245,7 +265,7 @@ class GeneralInstructions(Communication):
         return None
 
 
-class SourceSubsystem(Communication):
+class SourceSubsystem:
     """
     Manual: Source Subsystem - page 9 and 10 - Queries and Commands
     -----------------------------------------------------------------------------------------------------------------
@@ -291,69 +311,69 @@ class SourceSubsystem(Communication):
     """
 
     def __init__(self, IPV4):
-        super().__init__(IPV4)
+        self.IPV4 = IPV4
 
     def __str__(self):
         return f'Manual: Source Subsystem - page 9 and 10 - Queries and Commands, for details print object.__doc__'
 
     def MaximumVoltage(self, MaximumVoltage="SOURce:VOLtage:MAXimum?\n"):
-        return self.sendReceiveMessage(MaximumVoltage)
+        return Communication().sendReceiveMessage(self.IPV4, message=MaximumVoltage)
 
     def MaximumCurrent(self, MaximumCurrent="SOURce:CURrent:MAXimum?\n"):
-        return self.sendReceiveMessage(MaximumCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MaximumCurrent)
 
     def MaximumNegativeCurrent(self, MaximumNegativeCurrent="SOURce:CURrent:NEGative:MAXimum?\n"):
-        return self.sendReceiveMessage(MaximumNegativeCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MaximumNegativeCurrent)
 
     def MaximumPower(self, MaximumPower="SOURce:POWer:MAXimum?\n"):
-        return self.sendReceiveMessage(MaximumPower)
+        return Communication().sendReceiveMessage(self.IPV4, message=MaximumPower)
 
     def MaximumNegativePower(self, MaximumNegativePower="SOURce:POWer:NEGative:MAXimum?\n"):
-        return self.sendReceiveMessage(MaximumNegativePower)
+        return Communication().sendReceiveMessage(self.IPV4, message=MaximumNegativePower)
 
     def SetVoltage(self, voltage):
         message = f'SOURce:VOLtage {voltage}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadVoltageSet(self, ReadVoltageSet="SOURce:VOLtage?\n"):
-        return self.sendReceiveMessage(ReadVoltageSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadVoltageSet)
 
     def SetCurrent(self, current):
         message = f'SOURce:CURrent {current}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadCurrentSet(self, ReadCurrentSet="SOURce:CURrent?\n"):
-        return self.sendReceiveMessage(ReadCurrentSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadCurrentSet)
 
     def SetNegativeCurrent(self, negativecurrent):
         message = f'SOURce:CURrent:NEGative {negativecurrent}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadNegativeCurrentSet(self, ReadNegativeCurrentSet="SOURce:CURrent:NEGative?\n"):
-        return self.sendReceiveMessage(ReadNegativeCurrentSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadNegativeCurrentSet)
 
     def SetPower(self, power):
         message = f"SOURce:POWer {power}\n"
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadPowerSet(self, ReadPowerSet="SOURce:POWer?\n"):
-        return self.sendReceiveMessage(ReadPowerSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadPowerSet)
 
     def SetNegativePower(self, negativepower):
         message = f'SOURce:POWer:NEGative {negativepower}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadNegativePowerSet(self, ReadNegativePowerSet="SOURce:POWer:NEGative?\n"):
-        return self.sendReceiveMessage(ReadNegativePowerSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadNegativePowerSet)
 
-    def VoltageStepSize(self, VoltageStepSize="SOURce:VOLtage:STEpsize?\n"):
-        return self.sendReceiveMessage(VoltageStepSize)
+    def ReadVoltageStepSize(self, ReadVoltageStepSize="SOURce:VOLtage:STEpsize?\n"):
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadVoltageStepSize)
 
-    def CurrentStepSize(self, CurrentStepSize="SOURce:CURrent:STEpsize?\n"):
-        return self.sendReceiveMessage(CurrentStepSize)
+    def ReadCurrentStepSize(self, ReadCurrentStepSize="SOURce:CURrent:STEpsize?\n"):
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadCurrentStepSize)
 
-    def PowerStepSize(self, PowerStepSize="SOURce:POWer:STEpsize?\n"):
-        return self.sendReceiveMessage(PowerStepSize)
+    def ReadPowerStepSize(self, ReadPowerStepSize="SOURce:POWer:STEpsize?\n"):
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadPowerStepSize)
 
     def TestSourceSubsystem(self):
         logger.debug("Maximum Voltage runs:")
@@ -387,14 +407,14 @@ class SourceSubsystem(Communication):
         logger.debug("Read Last Negative Power Set runs:")
         self.ReadNegativePowerSet()
         logger.debug("Read Voltage Stepsize runs:")
-        self.VoltageStepSize()
+        self.ReadVoltageStepSize()
         logger.debug("Read Current Stepsize runs:")
-        self.CurrentStepSize()
+        self.ReadCurrentStepSize()
         logger.debug("Read Power Stepsize runs:")
-        self.PowerStepSize()
+        self.ReadPowerStepSize()
 
 
-class MeasureSubsystem(Communication):
+class MeasureSubsystem:
     """
     Manual: Measure Subsystem - page 10, 11 and 12 - Queries and Commands
     -----------------------------------------------------------------------------------------------------------------
@@ -470,84 +490,84 @@ class MeasureSubsystem(Communication):
     """
 
     def __init__(self, IPV4):
-        super().__init__(IPV4)
+        self.IPV4 = IPV4
 
     def __str__(self):
         return f'Manual: Measure Subsystem - page 10, 11 and 12 - Queries and Commands, for details print object.__doc__'
 
     def MeasureVoltage(self, MeasureVoltage="MEASure:VOLtage?\n"):
-        return self.sendReceiveMessage(MeasureVoltage)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureVoltage)
 
     def MeasureCurrent(self, MeasureCurrent="MEASure:CURrent?\n"):
-        return self.sendReceiveMessage(MeasureCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureCurrent)
 
     def MeasurePower(self, MeasurePower="MEASure:POWer?\n"):
-        return self.sendReceiveMessage(MeasurePower)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasurePower)
 
     def SetAhMeasurementState(self, setting):
         message = f'MEASure:INStrument AH,STATE,{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadAhMeasurementSetState(self, ReadAhMeasurementSetState="MEASure:INStrument AH,STATE?\n"):
-        return self.sendReceiveMessage(ReadAhMeasurementSetState)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadAhMeasurementSetState)
 
     def ReadAhMeasurementTimeHours(self, ReadAhMeasurementTimeHours="MEASure:INStrument AH,TIMEHR?\n"):
-        return self.sendReceiveMessage(ReadAhMeasurementTimeHours)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadAhMeasurementTimeHours)
 
     def ReadAhMeasurementTimeSeconds(self, ReadAhMeasurementTimeSeconds="MEASure:INStrument AH,TIMESEC?\n"):
-        return self.sendReceiveMessage(ReadAhMeasurementTimeSeconds)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadAhMeasurementTimeSeconds)
 
     def MeasureAhPositiveTotal(self, MeasureAhPositiveTotal="MEASure:INStrument AH,POS,TOTAL?\n"):
-        return self.sendReceiveMessage(MeasureAhPositiveTotal)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureAhPositiveTotal)
 
     def MeasureAhNegativeTotal(self, MeasureAhNegativeTotal="MEASure:INStrument AH,NEG,TOTAL?\n"):
-        return self.sendReceiveMessage(MeasureAhNegativeTotal)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureAhNegativeTotal)
 
     def MeasureAhMinimumCurrent(self, MeasureAhMinimumCurrent="MEASure:INStrument AH,POS,IMIN?\n"):
-        return self.sendReceiveMessage(MeasureAhMinimumCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureAhMinimumCurrent)
 
     def MeasureAhMaximumCurrent(self, MeasureAhMaximumCurrent="MEASure:INStrument AH,POS,IMAX?\n"):
-        return self.sendReceiveMessage(MeasureAhMaximumCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureAhMaximumCurrent)
 
     def MeasureAhMinimumNegativeCurrent(self, MeasureAhMinimumNegativeCurrent="MEASure:INStrument AH,NEG,IMIN?\n"):
-        return self.sendReceiveMessage(MeasureAhMinimumNegativeCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureAhMinimumNegativeCurrent)
 
     def MeasureAhMaximumNegativeCurrent(self, MeasureAhMaximumNegativeCurrent="MEASure:INStrument AH,NEG,IMAX?\n"):
-        return self.sendReceiveMessage(MeasureAhMaximumNegativeCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureAhMaximumNegativeCurrent)
 
     def SetWhMeasurementState(self, setting):
         message = f'MEASure:INStrument WH,STATE,{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadWhMeasurementSetState(self, ReadWhMeasurementSetState="MEASure:INStrument WH,STATE?\n"):
-        return self.sendReceiveMessage(ReadWhMeasurementSetState)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadWhMeasurementSetState)
 
     def ReadWhMeasurementTimeHours(self, ReadWhMeasurementTimeHours="MEASure:INStrument WH,TIMEHR?\n"):
-        return self.sendReceiveMessage(ReadWhMeasurementTimeHours)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadWhMeasurementTimeHours)
 
     def ReadWhMeasurementTimeSeconds(self, ReadWhMeasurementTimeSeconds="MEASure:INStrument WH,TIMESEC?\n"):
-        return self.sendReceiveMessage(ReadWhMeasurementTimeSeconds)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadWhMeasurementTimeSeconds)
 
     def MeasureWhPositiveTotal(self, MeasureWhPositiveTotal="MEASure:INStrument WH,POS,TOTAL?\n"):
-        return self.sendReceiveMessage(MeasureWhPositiveTotal)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureWhPositiveTotal)
 
     def MeasureWhNegativeTotal(self, MeasureWhNegativeTotal="MEASure:INStrument WH,NEG,TOTAL?\n"):
-        return self.sendReceiveMessage(MeasureWhNegativeTotal)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureWhNegativeTotal)
 
     def MeasureWhMinimumCurrent(self, MeasureWhMinimumCurrent="MEASure:INStrument WH,POS,PMIN?\n"):
-        return self.sendReceiveMessage(MeasureWhMinimumCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureWhMinimumCurrent)
 
     def MeasureWhMaximumCurrent(self, MeasureWhMaximumCurrent="MEASure:INStrument WH,POS,PMAX?\n"):
-        return self.sendReceiveMessage(MeasureWhMaximumCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureWhMaximumCurrent)
 
     def MeasureWhMinimumNegativeCurrent(self, MeasureWhMinimumNegativeCurrent="MEASure:INStrument WH,NEG,PMIN?\n"):
-        return self.sendReceiveMessage(MeasureWhMinimumNegativeCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureWhMinimumNegativeCurrent)
 
     def MeasureWhMaximumNegativeCurrent(self, MeasureWhMaximumNegativeCurrent="MEASure:INStrument WH,NEG,PMAX?\n"):
-        return self.sendReceiveMessage(MeasureWhMaximumNegativeCurrent)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureWhMaximumNegativeCurrent)
 
     def MeasureTemperature(self, MeasureTemperature="MEASure:TEMperature?\n"):
-        return self.sendReceiveMessage(MeasureTemperature)
+        return Communication().sendReceiveMessage(self.IPV4, message=MeasureTemperature)
 
     def TestMeasureSubsystem(self):
         logger.debug("Measure voltage runs:")
@@ -600,7 +620,7 @@ class MeasureSubsystem(Communication):
         self.MeasureTemperature()
 
 
-class SystemSubsystem(Communication):
+class SystemSubsystem:
     """
     Manual: Measure Subsystem - page 13, 14, 15 and 16 - Queries and Commands
     -----------------------------------------------------------------------------------------------------------------
@@ -687,105 +707,105 @@ class SystemSubsystem(Communication):
     """
 
     def __init__(self, IPV4):
-        super().__init__(IPV4)
+        self.IPV4 = IPV4
 
     def __str__(self):
         return f'Manual: Measure Subsystem - page 13 and 14 - Queries and Commands, for details print object.__doc__'
 
     def SetRemoteShutDown(self, setting):
         message = f'SYSTem:RSD[:STAtus] {setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadRemoteShutDownSet(self, ReadRemoteShutDownSet="SYSTem:RSD[:STAtus]?\n"):
-        return self.sendReceiveMessage(ReadRemoteShutDownSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadRemoteShutDownSet)
 
     def SetVoltageLimit(self, voltagelimit, setting):
         message = f'SYSTem:LIMits:VOLtage {voltagelimit},{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadVoltageLimitSet(self, ReadVoltageLimitSet="SYSTem:LIMits:VOLtage?\n"):
-        return self.sendReceiveMessage(ReadVoltageLimitSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadVoltageLimitSet)
 
     def SetCurrentLimit(self, currentlimit, setting):
         message = f'SYSTem:LIMits:CURrent {currentlimit},{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadCurrentLimitSet(self, ReadCurrentLimitSet="SYSTem:LIMits:CURrent?\n"):
-        return self.sendReceiveMessage(ReadCurrentLimitSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadCurrentLimitSet)
 
     def SetNegativeCurrentLimit(self, negativecurrentlimit, setting):
         message = f'SYSTem:LIMits:CURrent:NEGative {negativecurrentlimit},{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadNegativeCurrentLimitSet(self, ReadNegativeCurrentLimitSet="SYSTem:LIMits:CURrent:NEGative?\n"):
-        return self.sendReceiveMessage(ReadNegativeCurrentLimitSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadNegativeCurrentLimitSet)
 
     def SetPowerLimit(self, powerlimit, setting):
         message = f'SYSTem:LIMits:POWer {powerlimit},{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadPowerLimitSet(self, ReadPowerLimitSet="SYSTem:LIMits:POWer?\n"):
-        return self.sendReceiveMessage(ReadPowerLimitSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadPowerLimitSet)
 
     def SetNegativePowerLimit(self, negativepowerlimit, setting):
         message = f'SYSTem:LIMits:POWer:NEGative {negativepowerlimit},{setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadNegativePowerLimitSet(self, ReadNegativePowerLimitSet="SYSTem:LIMits:POWer:NEGative?\n"):
-        return self.sendReceiveMessage(ReadNegativePowerLimitSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadNegativePowerLimitSet)
 
-    def HighlightFrontpanel(self, HighlightFrontpanel="SYSTem:FROntpanel:HIGhlight\n"):
-        return self.sendMessage(HighlightFrontpanel)
+    def HighlightFrontpanel(self, message="SYSTem:FROntpanel:HIGhlight\n"):
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def LockFrontPanel(self, setting):
         message = f'SYSTem:FROntpanel[:STAtus] {setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadLockFrontpanelSet(self, ReadLockFrontpanelSet="SYSTem:FROntpanel[:STAtus]?\n"):
-        return self.sendReceiveMessage(ReadLockFrontpanelSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadLockFrontpanelSet)
 
     def LockControlFrontpanel(self, setting):
         message = f'SYSTem:FROntpanel:CONtrols {setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadLockControlFrontpanelSet(self, ReadLockControlFrontpanelSet="SYSTem:FROntpanel:CONtrols?\n"):
-        return self.sendReceiveMessage(ReadLockControlFrontpanelSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadLockControlFrontpanelSet)
 
     def SetTime(self, hour, minute, second):
         message = f'SYSTem:TIMe {hour},{minute},{second}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadTimeSet(self, ReadTimeSet="SYSTem:TIMe?\n"):
-        return self.sendReceiveMessage(ReadTimeSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadTimeSet)
 
     def SetDate(self, year, month, day):
         message = f'SYSTem:DATe {year},{month},{day}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadDateSet(self, ReadDateSet="SYSTem:DATe?\n"):
-        return self.sendReceiveMessage(ReadDateSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadDateSet)
 
     def ReadErrors(self, ReadErrors="SYSTem:ERRor?\n"):
-        return self.sendReceiveMessage(ReadErrors)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadErrors)
 
     def ReadWarnings(self, ReadWarnings="SYSTem:WARning?\n"):
-        return self.sendReceiveMessage(ReadWarnings)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadWarnings)
 
     def SetWatchdog(self, timer):
         message = f'SYSTem:COMmunicate:WATchdog SET,{timer}\n'
-        self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadWatchdogSet(self, ReadWatchdogSet="SYSTem:COMmunicate:WATchdog SET?\n"):
-        return self.sendReceiveMessage(ReadWatchdogSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadWatchdogSet)
 
     def ReadCurrentWatchdogState(self, ReadCurrentWatchdogState="SYSTem:COMmunicate:WATchdog?\n"):
-        return self.sendReceiveMessage(ReadCurrentWatchdogState)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadCurrentWatchdogState)
 
-    def DisableWatchdog(self, DisableWatchdog="SYSTem:COMmunicate:WATchdog STOP\n"):
-        return self.sendMessage(DisableWatchdog)
+    def DisableWatchdog(self, message="SYSTem:COMmunicate:WATchdog STOP\n"):
+        return Communication().sendMessage(self.IPV4, message=message)
 
-    def TestWatchdog(self, TestWatchdog="SYSTem:COMmunicate:WATchdog TEST\n"):
-        return self.sendMessage(TestWatchdog)
+    def TestWatchdog(self, message="SYSTem:COMmunicate:WATchdog TEST\n"):
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def TestSystemSubsystem(self):
         logger.debug("Remote Shut Down Set runs:")
@@ -846,7 +866,7 @@ class SystemSubsystem(Communication):
         self.TestWatchdog()
 
 
-class OutputSubsystem(Communication):
+class OutputSubsystem:
     """
     Manual: Output Subsystem - page 17 - Queries and Commands
     -----------------------------------------------------------------------------------------------------------------
@@ -860,17 +880,17 @@ class OutputSubsystem(Communication):
     """
 
     def __init__(self, IPV4):
-        super().__init__(IPV4)
+        self.IPV4 = IPV4
 
     def __str__(self):
         return f'Output Subsystem - page 17 - Queries and Commands, for details print object.__doc__'
 
     def SetOutput(self, setting):
         message = f'OUTPut {setting}\n'
-        return self.sendMessage(message)
+        return Communication().sendMessage(self.IPV4, message=message)
 
     def ReadOutputSet(self, ReadOutputSet="OUTPut?\n"):
-        return self.sendReceiveMessage(ReadOutputSet)
+        return Communication().sendReceiveMessage(self.IPV4, message=ReadOutputSet)
 
     def TestOutputSubsystem(self):
         logger.debug("Output State Set runs:")
@@ -883,7 +903,7 @@ class OutputSubsystem(Communication):
         self.ReadOutputSet()
 
 
-class ShutdownOperation(Communication):
+class ShutdownOperation:
     """
         Shutdown Functional Operation
         -----------------------------------------------------------------------------------------------------------------
@@ -898,7 +918,7 @@ class ShutdownOperation(Communication):
     """
 
     def __init__(self, IPV4):
-        super().__init__(IPV4)
+        self.IPV4 = IPV4
 
     def __str__(self):
         return f'Shutdown Operation, for details print object.__doc__'
@@ -932,6 +952,18 @@ class ShutdownOperation(Communication):
         OutputSubsystem(self.IPV4).ReadOutputSet()
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
 
+    def removeLimitShutdownValues(self):
+        SystemSubsystem(self.IPV4).SetVoltageLimit(0, 'OFF')
+        SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(self.IPV4).SetCurrentLimit(0, 'OFF')
+        SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
+        SystemSubsystem(self.IPV4).SetNegativeCurrentLimit(0, 'OFF')
+        SystemSubsystem(self.IPV4).ReadNegativeCurrentLimitSet()
+        SystemSubsystem(self.IPV4).SetPowerLimit(0, 'OFF')
+        SystemSubsystem(self.IPV4).ReadPowerLimitSet()
+        SystemSubsystem(self.IPV4).SetNegativePowerLimit(0, 'OFF')
+        SystemSubsystem(self.IPV4).ReadNegativePowerLimitSet()
+
 
 class WatchdogOperation(threading.Thread):
     """
@@ -953,7 +985,7 @@ class WatchdogOperation(threading.Thread):
     def __init__(self, IPV4, timer, sleeptime, deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
-        self.timer = timer
+        self.timer = timer * 1000
         self.sleeptime = sleeptime
         self.deamonState = deamonState
         self._stop_event = threading.Event()
@@ -1212,7 +1244,7 @@ class ChargingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
         IPV4: Address of the desired device to start shutdown operation
         -----------------------------------------------------------------------------------------------------------------
-        sleeptime: Sleep time of the thread, every sleep time, charging state is being checked.
+        sleepTime: Sleep time of the thread, every sleep time, charging state is being checked.
         -----------------------------------------------------------------------------------------------------------------
         bulkCurrent: Current setting for the bulk stage
         -----------------------------------------------------------------------------------------------------------------
@@ -1232,11 +1264,11 @@ class ChargingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
     """
 
-    def __init__(self, IPV4='0.0.0.0', sleeptime=10, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0, floatTime=0.0,
+    def __init__(self, IPV4='0.0.0.0', sleepTime=10, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0, floatTime=0.0,
                  deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
-        self.sleeptime = sleeptime
+        self.sleepTime = sleepTime
         self.bulkCurrent = bulkCurrent
         self.bulkVoltage = bulkVoltage
         self.absorptionCurrent = self.bulkCurrent * 0.8
@@ -1250,34 +1282,42 @@ class ChargingOperation(threading.Thread):
         self.deamonState = deamonState
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
+        self.bulkInfo = 0
+        self.absorptionInfo = 0
 
     def __str__(self):
         return f'Charging Operation, for details print object.__doc__'
 
-    def chargerInitialize(self):
-        logger.debug('Charger is being initialized!')
+    def chargingInitialize(self):
+        logger.debug('Charging is being initialized!')
+        cprint.printFeedback('Charging is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
         SystemSubsystem(self.IPV4).SetVoltageLimit(self.bulkVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetCurrentLimit(self.bulkCurrent + 10, 'ON')
         SystemSubsystem(self.IPV4).ReadCurrentLimitSet()
-        SystemSubsystem(self.IPV4).SetPowerLimit(self.bulkVoltage * self.bulkCurrent + 100, 'ON')
+        SystemSubsystem(self.IPV4).SetPowerLimit(self.bulkVoltage * self.bulkCurrent + 500, 'ON')
         SystemSubsystem(self.IPV4).ReadPowerLimitSet()
         time.sleep(1)
 
-    def chargerFinalize(self):
-        logger.debug(f'Charger is being finalized!')
-        ShutdownOperation(self.IPV4).limitShutdownValues()
-        ShutdownOperation(self.IPV4).setShutdownValues()
+    def chargingFinalize(self):
+        logger.debug(f'Charging is being finalized!')
+        cprint.printFeedback(f'Charging is being finalized!')
         ShutdownOperation(self.IPV4).setShutdownOutput()
+        ShutdownOperation(self.IPV4).setShutdownValues()
+        ShutdownOperation(self.IPV4).limitShutdownValues()
+        time.sleep(1)
 
     def outputInitialize(self):
+        logger.debug('Output is Initialized!')
+        cprint.printFeedback('Output is Initialized!')
         OutputSubsystem(self.IPV4).SetOutput(1)
         OutputSubsystem(self.IPV4).ReadOutputSet()
         time.sleep(1)
 
     def bulkStage(self):
         logger.debug('Bulk Stage is Initialized!')
+        cprint.printFeedback('Bulk Stage is Initialized!')
         SourceSubsystem(self.IPV4).SetVoltage(self.bulkVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetCurrent(self.bulkCurrent)
@@ -1287,6 +1327,7 @@ class ChargingOperation(threading.Thread):
 
     def absorptionStage(self):
         logger.debug('Absorption Stage is Initialized!')
+        cprint.printFeedback('Absorption Stage is Initialized!')
         SourceSubsystem(self.IPV4).SetVoltage(self.absorptionVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetCurrent(self.absorptionCurrent)
@@ -1296,6 +1337,7 @@ class ChargingOperation(threading.Thread):
 
     def floatingStage(self):
         logger.debug('Floating Stage is Initialized!')
+        cprint.printFeedback('Floating Stage is Initialized!')
         SourceSubsystem(self.IPV4).SetVoltage(self.floatVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetCurrent(self.floatCurrent)
@@ -1316,29 +1358,37 @@ class ChargingOperation(threading.Thread):
 
         if self.bulkMode:
             logger.debug('Bulk Mode is active!')
+            if self.bulkInfo < 1:
+                cprint.printFeedback('Bulk Mode is active!')
+                self.bulkInfo += 1
         elif self.absorptionMode:
-            logger.debug('Absorption is active!')
+            logger.debug('Absorption mode is active!')
+            if self.absorptionInfo < 1:
+                cprint.printFeedback('Absorption mode is active!')
+                self.absorptionInfo += 1
         elif self.floatingMode:
-            logger.debug('Floating mode active!')
+            logger.debug('Floating mode is active!')
+            cprint.printFeedback('Floating mode is active!')
             logger.debug(f'Float time is: {self.floatTime}')
             time.sleep(self.floatTime)
             self.stop()
 
     def stop(self):
-        logger.debug('Discharger stop event has been started!')
+        logger.debug('Charging stop event has been started!')
+        cprint.printFeedback('Charging stop event has been started!')
         self._stop_event.set()
 
     def run(self):
-        logger.debug('Charger thread class has been started!')
-        self.chargerInitialize()
+        logger.debug('Charging thread class has been started!')
+        self.chargingInitialize()
         self.bulkStage()
         self.outputInitialize()
         while not self._stop_event.is_set():
-            logger.debug('Charger thread class is running!')
-            time.sleep(self.sleeptime)
+            logger.debug('Charging thread class is running!')
+            time.sleep(self.sleepTime)
             self.checkChargingStage()
-        self.chargerFinalize()
-        logger.debug('Charger thread class has been stopped!')
+        self.chargingFinalize()
+        logger.debug('Charging thread class has been stopped!')
 
 
 class DischargingOperation(threading.Thread):
@@ -1357,11 +1407,11 @@ class DischargingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
     """
 
-    def __init__(self, IPV4='0.0.0.0', sleeptime=10, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0,
+    def __init__(self, IPV4='0.0.0.0', sleepTime=10, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0,
                  deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
-        self.sleeptime = sleeptime
+        self.sleepTime = sleepTime
         self.dischargeCurrent = dischargeCurrent
         self.dischargeVoltage = dischargeVoltage
         self.cutoffCurrent = cutoffCurrent
@@ -1370,31 +1420,32 @@ class DischargingOperation(threading.Thread):
         self._stop_event = threading.Event()
 
     def __str__(self):
-        return f'Dischargin Operation, for details print object.__doc__'
+        return f'Discharging Operation, for details print object.__doc__'
 
-    def dischargerInitialize(self):
-        logger.debug('Discharger is being initialized!')
+    def dischargingInitialize(self):
+        logger.debug('Discharging is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
         SystemSubsystem(self.IPV4).SetVoltageLimit(self.dischargeVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetNegativeCurrentLimit(self.dischargeCurrent - 10, 'ON')
         SystemSubsystem(self.IPV4).ReadNegativeCurrentLimitSet()
-        SystemSubsystem(self.IPV4).SetNegativePowerLimit(self.dischargeVoltage * self.dischargeCurrent - 100, 'ON')
+        SystemSubsystem(self.IPV4).SetNegativePowerLimit(self.dischargeVoltage * self.dischargeCurrent - 500, 'ON')
         SystemSubsystem(self.IPV4).ReadNegativePowerLimitSet()
         time.sleep(1)
 
-    def dischargerFinalize(self):
-        logger.debug(f'Discharger is being finalized!')
-        ShutdownOperation(self.IPV4).limitShutdownValues()
-        ShutdownOperation(self.IPV4).setShutdownValues()
+    def dischargingFinalize(self):
+        logger.debug(f'Discharging is being finalized!')
         ShutdownOperation(self.IPV4).setShutdownOutput()
+        ShutdownOperation(self.IPV4).setShutdownValues()
+        ShutdownOperation(self.IPV4).limitShutdownValues()
+        time.sleep(1)
 
     def outputInitialize(self):
         OutputSubsystem(self.IPV4).SetOutput(1)
         OutputSubsystem(self.IPV4).ReadOutputSet()
         time.sleep(1)
 
-    def dischargeStage(self):
+    def dischargingStage(self):
         logger.debug('Discharging stage is started!')
         SourceSubsystem(self.IPV4).SetVoltage(self.dischargeVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
@@ -1406,27 +1457,25 @@ class DischargingOperation(threading.Thread):
 
     def checkDischargingStage(self):
         if float(MeasureSubsystem(self.IPV4).MeasureCurrent()) > self.cutoffCurrent:
-            self.dischargerFinalize()
             self.stop()
         else:
             logger.debug('Discharging is still running!')
 
     def stop(self):
-        logger.debug('Discharger stop event has been started!')
-        self.dischargerFinalize()
+        logger.debug('Discharging stop event has been started!')
         self._stop_event.set()
 
     def run(self):
-        logger.debug('Discharger thread class has been started!')
-        self.dischargerInitialize()
-        self.dischargeStage()
+        logger.debug('Discharging thread class has been started!')
+        self.dischargingInitialize()
+        self.dischargingStage()
         self.outputInitialize()
         while not self._stop_event.is_set():
-            logger.debug('Discharger thread class is running!')
-            time.sleep(self.sleeptime)
+            logger.debug('Discharging thread class is running!')
+            time.sleep(self.sleepTime)
             self.checkDischargingStage()
-        self.dischargerFinalize()
-        logger.debug('Charger thread class has been stopped!')
+        self.dischargingFinalize()
+        logger.debug('Discharging thread class has been stopped!')
 
 
 class CyclingOperation(threading.Thread):
@@ -1435,9 +1484,9 @@ class CyclingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
         IPV4: Address of the desired device to start shutdown operation
         -----------------------------------------------------------------------------------------------------------------
-        sleeptime: Sleep time of the thread, every sleep time, charging state is being checked.
+        sleepTime: Sleep time of the thread, every sleep time, charging state is being checked.
         -----------------------------------------------------------------------------------------------------------------
-        cycletime: Total number of cyling the battery, charging and discharing it counts as one cycling!
+        cycleTime: Total number of cycling the battery, charging and discharging (discharging and charging), it counts as one cycling!
         -----------------------------------------------------------------------------------------------------------------
         bulkCurrent: Current setting for the bulk stage
         -----------------------------------------------------------------------------------------------------------------
@@ -1451,7 +1500,7 @@ class CyclingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
         floatVoltage: Voltage setting for the floating stage
         -----------------------------------------------------------------------------------------------------------------
-        floatTime: Time setting for the floating stage timer, when it is done charging operion stops!
+        floatTime: Time setting for the floating stage timer, when it is done charging operation stops!
         -----------------------------------------------------------------------------------------------------------------
         dischargeCurrent: Maximum discharging current set
         -----------------------------------------------------------------------------------------------------------------
@@ -1459,19 +1508,23 @@ class CyclingOperation(threading.Thread):
         -----------------------------------------------------------------------------------------------------------------
         cutoffCurrent: Minimum current to decide stop discharging operation
         -----------------------------------------------------------------------------------------------------------------
-        restTime: Timer to decide test time between charging to discharging operation
+        afterChargingRestTime: Timer to decide rest time after charging part is done!
         -----------------------------------------------------------------------------------------------------------------
-        There are three main logger types, be sure that one of them is being used only especially Ah vs Wh!
+        afterDischargingRestTime: Timer to decide rest time after discharging part is done!
+        -----------------------------------------------------------------------------------------------------------------
+        startCharging: Flag to decide starting stage (if True -> Charging starts , if False -> Discharging starts!)
+        -----------------------------------------------------------------------------------------------------------------
+        There are three main logger types, be sure that one of them is being used especially Ah or Wh!
         -----------------------------------------------------------------------------------------------------------------
     """
 
-    def __init__(self, IPV4='0.0.0.0', sleeptime=10, cycletime=0, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0,
-                 floatTime=0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0, restTime=30.0,
-                 deamonState=True):
+    def __init__(self, IPV4='0.0.0.0', sleepTime=10, cycleTime=0, bulkCurrent=0.0, bulkVoltage=0.0, floatVoltage=0.0,
+                 floatTime=0.0, dischargeCurrent=0.0, dischargeVoltage=0.0, cutoffCurrent=0.0,
+                 afterChargingRestTime=30.0, afterDischargingRestTime=30.0, startCharging=True, deamonState=True):
         super().__init__()
         self.IPV4 = IPV4
-        self.sleeptime = sleeptime
-        self.cycletime = cycletime
+        self.sleepTime = sleepTime
+        self.cycleTime = cycleTime
         self.bulkCurrent = bulkCurrent
         self.bulkVoltage = bulkVoltage
         self.absorptionCurrent = self.bulkCurrent * 0.8
@@ -1489,40 +1542,56 @@ class CyclingOperation(threading.Thread):
         self.dischargeCurrent = dischargeCurrent
         self.dischargeVoltage = dischargeVoltage
         self.cutoffCurrent = cutoffCurrent
-        self.restTime = restTime
+        self.afterChargingRestTime = afterChargingRestTime
+        self.afterDischargingRestTime = afterDischargingRestTime
+        self.startCharging = startCharging
         self.deamonState = deamonState
         self.counter = 0
+        self.bulkInfo = 0
+        self.absorptionInfo = 0
         self.setDaemon(self.deamonState)
         self._stop_event = threading.Event()
 
     def __str__(self):
         return f'Cycling Operation, for details print object.__doc__'
 
-    def chargerInitialize(self):
-        logger.debug('Charger is being initialized!')
+    def cyclingFinalize(self):
+        logger.debug(f'Cycling is being finalized!')
+        cprint.printFeedback(f'Cycling is being finalized!')
+        ShutdownOperation(self.IPV4).setShutdownOutput()
+        ShutdownOperation(self.IPV4).setShutdownValues()
+        ShutdownOperation(self.IPV4).limitShutdownValues()
+        time.sleep(1)
+
+    def outputInitialize(self):
+        logger.debug(f'Output is being initialized!')
+        cprint.printFeedback(f'Output is being initialized!')
+        OutputSubsystem(self.IPV4).SetOutput(1)
+        OutputSubsystem(self.IPV4).ReadOutputSet()
+        time.sleep(1)
+
+    def chargingInitialize(self):
+        logger.debug('Charging is being initialized!')
+        cprint.printFeedback('Charging is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
         SystemSubsystem(self.IPV4).SetVoltageLimit(self.bulkVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
         SystemSubsystem(self.IPV4).SetCurrentLimit(self.bulkCurrent + 10, 'ON')
         SystemSubsystem(self.IPV4).ReadCurrentLimitSet()
-        SystemSubsystem(self.IPV4).SetPowerLimit(self.bulkVoltage * self.bulkCurrent + 100, 'ON')
+        SystemSubsystem(self.IPV4).SetPowerLimit(self.bulkVoltage * self.bulkCurrent + 500, 'ON')
         SystemSubsystem(self.IPV4).ReadPowerLimitSet()
         time.sleep(1)
 
-    def cyclingFinalize(self):
-        logger.debug(f'Stage is being finalized!')
-        ShutdownOperation(self.IPV4).limitShutdownValues()
-        ShutdownOperation(self.IPV4).setShutdownValues()
+    def chargingFinalize(self):
+        logger.debug('Charging is being finalized!')
+        cprint.printFeedback('Charging is being finalized!')
+        SystemSubsystem(self.IPV4).HighlightFrontpanel()
         ShutdownOperation(self.IPV4).setShutdownOutput()
-        time.sleep(1)
-
-    def outputInitialize(self):
-        OutputSubsystem(self.IPV4).SetOutput(1)
-        OutputSubsystem(self.IPV4).ReadOutputSet()
-        time.sleep(1)
+        ShutdownOperation(self.IPV4).setShutdownValues()
 
     def bulkStage(self):
         logger.debug('Bulk Stage is Initialized!')
+        cprint.printFeedback('Bulk Stage is Initialized!')
         SourceSubsystem(self.IPV4).SetVoltage(self.bulkVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetCurrent(self.bulkCurrent)
@@ -1532,6 +1601,7 @@ class CyclingOperation(threading.Thread):
 
     def absorptionStage(self):
         logger.debug('Absorption Stage is Initialized!')
+        cprint.printFeedback('Absorption Stage is Initialized!')
         SourceSubsystem(self.IPV4).SetVoltage(self.absorptionVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetCurrent(self.absorptionCurrent)
@@ -1541,11 +1611,12 @@ class CyclingOperation(threading.Thread):
 
     def floatingStage(self):
         logger.debug('Floating Stage is Initialized!')
+        cprint.printFeedback('Floating Stage is Initialized!')
         SourceSubsystem(self.IPV4).SetVoltage(self.floatVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetCurrent(self.floatCurrent)
         SourceSubsystem(self.IPV4).ReadCurrentSet()
-        SourceSubsystem(self.IPV4).SetPower(self.floatCurrent * self.floatVoltage + 500)
+        SourceSubsystem(self.IPV4).SetPower(self.floatCurrent * self.floatVoltage + 50)
         SourceSubsystem(self.IPV4).ReadPowerSet()
         time.sleep(1)
 
@@ -1561,22 +1632,31 @@ class CyclingOperation(threading.Thread):
 
         if self.bulkMode:
             logger.debug('Bulk Mode is active!')
+            if self.bulkInfo < 1:
+                cprint.printFeedback('Bulk Mode is active!')
+                self.bulkInfo += 1
         elif self.absorptionMode:
             logger.debug('Absorption Mode is active!')
+            if self.absorptionInfo < 1:
+                cprint.printFeedback('Absorption Mode is active!')
         elif self.floatingMode:
-            logger.debug('Floating mode active!')
+            logger.debug('Floating mode is active!')
+            cprint.printFeedback('Floating mode is active!')
             logger.debug(f'Float time is: {self.floatTime}')
             time.sleep(self.floatTime)
-            self.cyclingFinalize()
-            time.sleep(self.restTime)
+            self.chargingFinalize()
+            time.sleep(self.afterChargingRestTime)
             self.bulkMode = True
             self.absorptionMode = False
             self.floatingMode = False
             self.chargingMode = False
+            if not self.startCharging:
+                self.counter += 1
             self.dischargingInitializeMode = True
 
-    def dischargerInitialize(self):
-        logger.debug('Discharger is being initialized!')
+    def dischargingInitialize(self):
+        logger.debug('Discharging is being initialized!')
+        cprint.printFeedback('Discharging is being initialized!')
         SystemSubsystem(self.IPV4).HighlightFrontpanel()
         SystemSubsystem(self.IPV4).SetVoltageLimit(self.dischargeVoltage, 'ON')
         SystemSubsystem(self.IPV4).ReadVoltageLimitSet()
@@ -1586,8 +1666,9 @@ class CyclingOperation(threading.Thread):
         SystemSubsystem(self.IPV4).ReadNegativePowerLimitSet()
         time.sleep(1)
 
-    def dischargerStage(self):
+    def dischargingStage(self):
         logger.debug('Discharging stage is started!')
+        cprint.printFeedback('Discharging stage is started!')
         SourceSubsystem(self.IPV4).SetVoltage(self.dischargeVoltage)
         SourceSubsystem(self.IPV4).ReadVoltageSet()
         SourceSubsystem(self.IPV4).SetNegativeCurrent(self.dischargeCurrent)
@@ -1596,49 +1677,89 @@ class CyclingOperation(threading.Thread):
         SourceSubsystem(self.IPV4).ReadNegativePowerSet()
         time.sleep(1)
 
+    def dischargingFinalize(self):
+        logger.debug('Charging is being finalized!')
+        cprint.printFeedback('Charging is being finalized!')
+        SystemSubsystem(self.IPV4).HighlightFrontpanel()
+        ShutdownOperation(self.IPV4).setShutdownOutput()
+        ShutdownOperation(self.IPV4).setShutdownValues()
+
     def checkDischargingStage(self):
         if float(MeasureSubsystem(self.IPV4).MeasureCurrent()) > self.cutoffCurrent:
-            self.cyclingFinalize()
-            time.sleep(self.restTime)
+            self.dischargingFinalize()
+            time.sleep(self.afterDischargingRestTime)
+            if self.startCharging:
+                self.counter += 1
             self.dischargingMode = False
             self.chargingInitializeMode = True
-            self.counter += 1
         else:
             logger.debug('Discharging is still running!')
 
     def stop(self):
         logger.debug('Cycling thread class stop event has been started!')
+        cprint.printFeedback('Cycling thread class stop event has been started!')
         self._stop_event.set()
 
     def run(self):
         logger.debug('Cycling thread class has been started!')
-        self.chargingInitializeMode = True
-        while not self._stop_event.is_set():
-            if self.counter < self.cycletime:
-                if self.chargingInitializeMode:
-                    cprint.printFeedback('Charger mode initialized!')
-                    self.chargerInitialize()
-                    self.bulkStage()
-                    self.outputInitialize()
-                    self.chargingInitializeMode = False
-                    self.chargingMode = True
-                elif self.chargingMode:
-                    cprint.printFeedback('Charger mode is running!')
-                    time.sleep(self.sleeptime)
-                    self.checkChargingStage()
-                elif self.dischargingInitializeMode:
-                    cprint.printFeedback('Discharging mode initialized!')
-                    self.dischargerInitialize()
-                    self.dischargerStage()
-                    self.outputInitialize()
-                    self.dischargingInitializeMode = False
-                    self.dischargingMode = True
-                elif self.dischargingMode:
-                    cprint.printFeedback('Discharger mode is running!')
-                    time.sleep(self.sleeptime)
-                    self.checkDischargingStage()
-            else:
-                self.stop()
+        if self.startCharging:
+            self.chargingInitializeMode = True
+            self.dischargingInitializeMode = False
+            while not self._stop_event.is_set():
+                if self.counter < self.cycleTime:
+                    if self.chargingInitializeMode:
+                        cprint.printFeedback('Charging mode initialized!')
+                        self.chargingInitialize()
+                        self.bulkStage()
+                        self.outputInitialize()
+                        self.chargingInitializeMode = False
+                        self.chargingMode = True
+                    elif self.chargingMode:
+                        cprint.printFeedback('Charging mode is running!')
+                        time.sleep(self.sleepTime)
+                        self.checkChargingStage()
+                    elif self.dischargingInitializeMode:
+                        cprint.printFeedback('Discharging mode initialized!')
+                        self.dischargingInitialize()
+                        self.dischargingStage()
+                        self.outputInitialize()
+                        self.dischargingInitializeMode = False
+                        self.dischargingMode = True
+                    elif self.dischargingMode:
+                        cprint.printFeedback('Discharging mode is running!')
+                        time.sleep(self.sleepTime)
+                        self.checkDischargingStage()
+                else:
+                    self.stop()
+        else:
+            self.chargingInitializeMode = False
+            self.dischargingInitializeMode = True
+            while not self._stop_event.is_set():
+                if self.counter < self.cycleTime:
+                    if self.chargingInitializeMode:
+                        cprint.printFeedback('Charging mode initialized!')
+                        self.chargingInitialize()
+                        self.bulkStage()
+                        self.outputInitialize()
+                        self.chargingInitializeMode = False
+                        self.chargingMode = True
+                    elif self.chargingMode:
+                        cprint.printFeedback('Charging mode is running!')
+                        time.sleep(self.sleepTime)
+                        self.checkChargingStage()
+                    elif self.dischargingInitializeMode:
+                        cprint.printFeedback('Discharging mode is initialized!')
+                        self.dischargingInitialize()
+                        self.dischargingStage()
+                        self.outputInitialize()
+                        self.dischargingInitializeMode = False
+                        self.dischargingMode = True
+                    elif self.dischargingMode:
+                        cprint.printFeedback('Discharging mode is running!')
+                        time.sleep(self.sleepTime)
+                        self.checkDischargingStage()
+                else:
+                    self.stop()
         self.cyclingFinalize()
         cprint.printFeedback('Cycling thread class has been stopped!')
 
@@ -1680,88 +1801,86 @@ class TestOperations:
     def __init__(self, IPV4):
         self.IPV4 = IPV4
         logger.debug("Test operations has been created!")
+        self.Delta = SM15K(self.IPV4)
 
     def __str__(self):
         return f'Testing Operations, for details print object.__doc__'
 
     def testGeneralInstructions(self):
         logger.debug("General Instructions test runs!")
-        GeneralComments = GeneralInstructions(self.IPV4)
-        logger.debug(GeneralComments.__doc__)
-        GeneralComments.TestGeneralInstructions()
+        logger.debug(self.Delta.__doc__)
+        self.Delta.TestGeneralInstructions()
         logger.debug("General Instructions test finished!")
 
     def testSourceSubsystem(self):
         logger.debug("Source Subsystem test runs!")
-        SourceComments = SourceSubsystem(self.IPV4)
-        logger.debug(SourceComments.__doc__)
-        SourceComments.TestSourceSubsystem()
-        logger.debug("Source Sunsystem test finished!")
+        logger.debug(self.Delta.source.__doc__)
+        self.Delta.source.TestSourceSubsystem()
+        logger.debug("Source Subsystem test finished!")
 
     def testMeasureSubsystem(self):
         logger.debug("Measurement Subsystem test runs!")
-        MeasureComments = MeasureSubsystem(self.IPV4)
-        logger.debug(MeasureSubsystem.__doc__)
-        MeasureComments.TestMeasureSubsystem()
+        logger.debug(self.Delta.measure.__doc__)
+        self.Delta.measure.TestMeasureSubsystem()
         logger.debug("Measurement Subsystem test finished!")
 
     def testSystemSubsystem(self):
         logger.debug("System Subsystem test runs!")
-        SystemComments = SystemSubsystem(self.IPV4)
-        logger.debug(SystemComments.__doc__)
-        SystemComments.TestSystemSubsystem()
+        logger.debug(self.Delta.measure.__doc__)
+        self.Delta.system.TestSystemSubsystem()
         logger.debug("System Subsystem test finished!")
 
     def testOutputSubsystem(self):
         logger.debug("Output Subsystem test runs!")
-        OutputComments = OutputSubsystem(self.IPV4)
-        logger.debug(OutputComments.__doc__)
-        OutputComments.TestOutputSubsystem()
+        logger.debug(self.Delta.output.__doc__)
+        self.Delta.output.TestOutputSubsystem()
         logger.debug("Output Subsystem test finished!")
 
-    def testWatchdogOperation(self, timer, sleeptime):
-        logger.debug("Watchdog opreation test runs!")
-        Watchdog = WatchdogOperation(self.IPV4, timer, sleeptime)
+    def testWatchdogOperation(self, timer, sleepTime):
+        logger.debug("Watchdog operation test runs!")
+        Watchdog = WatchdogOperation(self.IPV4, timer, sleepTime)
         Watchdog.start()
 
     def testShutdownOperation(self):
-        logger.debug("Shutdown opreation test runs!")
-        Shutdown = ShutdownOperation(self.IPV4)
-        Shutdown.limitShutdownValues()
-        Shutdown.setShutdownValues()
-        Shutdown.setShutdownOutput()
+        logger.debug("Shutdown operation test runs!")
+        self.Delta.shutdown.limitShutdownValues()
+        self.Delta.shutdown.setShutdownValues()
+        self.Delta.shutdown.setShutdownOutput()
+        self.Delta.shutdown.removeLimitShutdownValues()
 
-    def testBasicDataloggerOperation(self, loggingtime):
-        logger.debug("Basic Datalogger opreation test runs!")
-        BasicDatalogger = BasicDataloggerOperation(self.IPV4, loggingtime)
+    def testBasicDataloggerOperation(self, loggingTime):
+        logger.debug("Basic Datalogger operation test runs!")
+        BasicDatalogger = BasicDataloggerOperation(self.IPV4, loggingTime)
         BasicDatalogger.start()
 
-    def testAhDataloggerOperation(self, loggingtime):
-        logger.debug("Ah Datalogger opreation test runs!")
-        AhDatalogger = AhDataloggerOperation(self.IPV4, loggingtime)
+    def testAhDataloggerOperation(self, loggingTime):
+        logger.debug("Ah Datalogger operation test runs!")
+        AhDatalogger = AhDataloggerOperation(self.IPV4, loggingTime)
         AhDatalogger.start()
 
-    def testWhDataloggerOperation(self, loggingtime):
-        logger.debug("Wh Datalogger opreation test runs!")
-        WhDatalogger = WhDataloggerOperation(self.IPV4, loggingtime)
+    def testWhDataloggerOperation(self, loggingTime):
+        logger.debug("Wh Datalogger operation test runs!")
+        WhDatalogger = WhDataloggerOperation(self.IPV4, loggingTime)
         WhDatalogger.start()
 
-    def testChargerOperation(self, sleeptime, bulkCurrent, bulkVoltage, floatVoltage):
-        logger.debug("Charging opreation test runs!")
-        Charger = ChargingOperation(self.IPV4, sleeptime, bulkCurrent, bulkVoltage, floatVoltage)
-        Charger.start()
+    def testChargingOperation(self, sleepTime, bulkCurrent, bulkVoltage, floatVoltage):
+        logger.debug("Charging operation test runs!")
+        Charging = ChargingOperation(self.IPV4, sleepTime, bulkCurrent, bulkVoltage, floatVoltage)
+        Charging.start()
 
-    def testDischargerOperation(self, sleeptime, voltageset, currentset, cufoffcurrentset):
-        logger.debug("Discharging opreation test runs!")
-        Discharger = DischargingOperation(self.IPV4, sleeptime, voltageset, currentset, cufoffcurrentset)
-        Discharger.start()
+    def testDischargingOperation(self, sleepTime, voltageSet, currentSet, cutoffCurrent):
+        logger.debug("Discharging operation test runs!")
+        Discharging = DischargingOperation(self.IPV4, sleepTime, voltageSet, currentSet, cutoffCurrent)
+        Discharging.start()
 
-    def testCyclingOperation(self, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage,
-                             floatTime, dischargeCurrent, dischargeVoltage, cutoffCurrent=-2):
-        logger.debug("Discharging opreation test runs!")
-        Cycler = CyclingOperation(self.IPV4, sleeptime, cycletime, bulkCurrent, bulkVoltage, floatVoltage, floatTime,
-                                  dischargeCurrent, dischargeVoltage, cutoffCurrent)
-        Cycler.start()
+    def testCyclingOperation(self, sleepTime, cycleTime, bulkCurrent, bulkVoltage, floatVoltage,
+                             floatTime, dischargeCurrent, dischargeVoltage, cutoffCurrent,
+                             afterChargingRestTime, afterDischargingRestTime, startCharging=True):
+        logger.debug("Discharging operation test runs!")
+        Cycling = CyclingOperation(self.IPV4, sleepTime, cycleTime, bulkCurrent, bulkVoltage, floatVoltage, floatTime,
+                                   dischargeCurrent, dischargeVoltage, cutoffCurrent, afterChargingRestTime,
+                                   afterDischargingRestTime, startCharging)
+        Cycling.start()
 
 
 if __name__ == '__main__':

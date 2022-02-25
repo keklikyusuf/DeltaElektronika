@@ -8,9 +8,9 @@
 
 This is a created package for functional operation of SM15K.
 
-### Avaliable oeprations and functions
+### Available operations and functions
 1. Functions from datasheet [Delta Electronika](https://www.delta-elektronika.nl/upload/MANUAL_ETHERNET_AND_SEQUENCER_PROGRAMMING_SM15K.pdf)
-2. Datalogging thread for three type of frames (Basic, Ah and Wh)
+2. Data logging thread for three type of frames (Basic, Ah and Wh)
 3. Watchdog thread for safe operation
 4. Charging thread for 3 step charging algorithm
 5. Discharging thread for discharging algorithm
@@ -25,8 +25,8 @@ This is a created package for functional operation of SM15K.
 6. [Sys Module / import sys](https://docs.python.org/3/library/sys.html)
 7. [Logging Module / import logging](https://docs.python.org/3/howto/logging.html)
 
-__Note__: Datalogger logs as txt and comma seperated base.
-
+__Note__: Datalogger logs as txt and comma separated base.
+ 
 #### Installation
 ```pip install SM15K```
 
@@ -42,48 +42,105 @@ import time
 # IP Address of the power supply, can be obtain the device itself.
 IPV4 = '0.0.0.0' 
 
-# To activate debugging option. Creates systemlog file and logs there
-#SM15K.activateDebugLogger = True 
+# To activate debugging option. Creates system-log file and logs there
+SM15K.activateDebugLogger = True 
 
-# To deactivate debugging option. Creates systemlog file and logs there
-SM15K.activateDebugLogger = False 
-
+# To use colorful printing at console.
 ColorPrint = SM15K.ColorPrinter()
+ColorPrint.printFeedback(message="Your message to print to console as feedback!")
+ColorPrint.printComment(message="Your message to print to console as comment!")
+ColorPrint.printError(message="Your message to print to console as error!")
+ColorPrint.printNormal(message="Your message to print to console as normal!")
+ColorPrint.printColorful(message="Your message to print to console as colorful!", colour="purple")
+# Available colors for printColorful method are "purple", "blue", "cyan", "green", "red", "yellow", "normal"
 
-#Be sure Watchdog timer is higher than sleeptime of the thread
-Watchdog = SM15K.WatchdogOperation(IPV4, timer=5000, sleeptime=4)  
+# To use all comments for SM15K
+MyDelta = SM15K.SM15K(IPV4=IPV4)
 
+# Source related comments
+MyDelta.source."SourceRelatedComments"()
+MyDelta.source.ReadPowerSet()
+MyDelta.source.SetCurrent(current=20)
+
+# Measure related comments
+MyDelta.measure."MeasureRelatedComments"()
+MyDelta.measure.MeasurePower()
+MyDelta.measure.SetAhMeasurementState(setting="ON")
+
+# Output related comments
+MyDelta.output."OutputRelatedComments"()
+MyDelta.output.ReadOutputSet()
+MyDelta.output.SetOutput(setting="ON")
+
+# System related comments
+MyDelta.system."SystemRelatedComments"()
+MyDelta.system.ReadWatchdogSet()
+MyDelta.system.SetPowerLimit(powerlimit=2000, setting="ON")
+
+# Shutdown related comments
+MyDelta.shutdown."ShutdownRelatedComments"()
+MyDelta.shutdown.limitShutdownValues()
+MyDelta.shutdown.setShutdownOutput()
+```
+__Note__: All comments group according to datasheet of SM15K.
+
+__Note__: Datasheet for [Delta Electronika](https://www.delta-elektronika.nl/upload/MANUAL_ETHERNET_AND_SEQUENCER_PROGRAMMING_SM15K.pdf)
+
+```python
+# There are additional independent features has been added!
+# Watchdog operation for safety.
+Safety = SM15K.WatchdogOperation(timer=5, sleeptime=4)
+
+```
+__Note__: Be sure that sleeptime is lower than timer. This means withing 5 seconds of lack of communication, SM15K will
+shut its output down. If sleeptime is lower, watchdog will reset itself for every cycle of sleeptime period.
+
+```python
+# Datalogger operation for logging related data.
 # Default color is green, available colors are;
 # purple, blue, cyan, green, yellow, red and normal                            
 BasicDatalogger = SM15K.BasicDataloggerOperation(IPV4, loggingTime=10,
                 printColor= 'purple')    
-                
+```
+__Note__: Basic data frame is; dataFrameBasic = 'Timestamp','Voltage', 'Current', 'Power'
+```python
+# Datalogger operation for logging related data.
 # Default color is green, available colors are;
 # purple, blue, cyan, green, yellow, red and normal 
 AhDatalogger = SM15K.AhDataloggerOperation(IPV4, loggingTime=10, 
                 printColor= 'red')
- 
+```
+__Note__: Ah data frame is; dataFrameAh = 'Timestamp','Voltage', 'Current', 'Power', 'PositiveAh', 'NegativeAh', 'AhSeconds', 'AhHours'
+```python
+# Datalogger operation for logging related data.
 # Default color is green, available colors are;
 # purple, blue, cyan, green, yellow, red and normal            
 WhDatalogger = SM15K.WhDataloggerOperation(IPV4, loggingTime=5, 
                 printColor='blue')  
-                            
+```
+__Note__: Wh data frame is; dataFrameAh = 'Timestamp','Voltage', 'Current', 'Power', 'PositiveWh', 'NegativeWh', 'WhSeconds', 'WhHours'
+```python
+# Charging operation for battery charging.
 Charging = SM15K.ChargingOperation(IPV4, sleeptime=5, bulkCurrent=100, 
                 bulkVoltage= 14.5, floatVoltage=13.8, floatTime=300)
-                
+
+# Discharging operation for battery discharging.
 Discharging = SM15K.DischargingOperation(IPV4, sleeptime=5, 
                 dischargeCurrent=100, dischargeVoltage=10.5, 
                 cutoffCurrent=2)
-                
+# Cycling operation for battery cycling.                
 Cycling = SM15K.CyclingOperation(IPV4, sleeptime=5, cycletime=10, 
                 bulkCurrent=100, bulkVoltage=14.5, floatVoltage=13.8, 
-                floatTime=300, dischargeCurrent=100, 
-                dischargeVoltage=10.5, cutoffCurrent=2, restTime=30)
+                floatTime=300, dischargeCurrent=100, dischargeVoltage=10.5, 
+                cutoffCurrent=2,afterChargingRestTime=30.0, 
+                afterDischargingRestTime=30.0, startCharging=True)
 ```
+__Note__: Rest times can be set after each step (after charging and/or after discharging)
+__Note__: To be able to start from desired operation (charging or discharging as first step) set startCharging=True or False
 > Each functionality has been created with related parameters at above.  
-> To be able to use them ```python object.start()``` must be used to start the thread operation
+> To be able to use them ```python threadObject.start()``` must be used to start the thread operation
 ```python
-Watchdog.start()        # To start watchdog thread class
+Safety.start()        # To start watchdog thread class
 BasicDatalogger.start() # To start BasicDatalogger thread class
 AhDatalogger.start()    # To start AhDatalogger thread class
 WhDatalogger.start()    # To start WhDatalogger thread class
@@ -92,14 +149,14 @@ Discharging.start()     # To start Discharging thread class
 Cycling.start()         # To start Cycling thread class
 ```
 > After calling thread start, if main loop ends, thread is going to end as well
-> because of being deamong thread true. That is why infinity loop or long term loop needed to run.
-> Or it can be used as thread.join() to be sure that main does not end before the thread is done.
+> because of being deamon thread true. That is why infinity loop or long term loop needed to run.
+> Or it can be used as thread.join() after it has been started to be sure that main does not end before the thread is done.
 
 __Note__: Do not operate charging and discharging threads at the same operation.
 
 __Note__: Do not operate Ah and Wh datalogger threads at the same operation. Delta can log one of them at a time.
 
-__Note__: Watchdog is being set to delta itself, that is why be sure timer is bigger than sleep time to have healty operation.
+__Note__: Watchdog is being set to delta itself, that is why be sure timer is bigger than sleep time to have healthy operation.
 
 ```python
 while True:
@@ -108,9 +165,10 @@ while True:
     print(f'Main loop runs in here!')
 ```
 > You can run anything you want here as well to have multifunctional operation while system runs with multiple threads.
->
+
 __Note__: All threads are created as deamon thread which means, if main finishes its operation
-threads are going to stop operation. That is why you should keep them in infinite loop.
+threads are going to stop operation. That is why you should keep them in infinite loop. If you like to have the thread 
+keeps operation even if your main code has been finished, set the deamonState = False
 
 ## License
 

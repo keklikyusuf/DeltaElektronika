@@ -136,7 +136,7 @@ Cycling = SM15K.CyclingOperation(IPV4, sleeptime=5, cycletime=10,
                 afterDischargingRestTime=30.0, startCharging=True)
 ```
 __Note__: Rest times can be set after each step (after charging and/or after discharging)
-__Note__: To be able to start from desired operation (charging or discharging as first step) set startCharging=True or False
+__Note__: To be able to start from desired operation (charging or discharging as first step) set ```python startCharging=True or False```
 > Each functionality has been created with related parameters at above.  
 > To be able to use them ```python threadObject.start()``` must be used to start the thread operation
 ```python

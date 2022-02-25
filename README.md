@@ -140,7 +140,7 @@ __Note__: To be able to start from desired operation (charging or discharging as
 > Each functionality has been created with related parameters at above.  
 > To be able to use them ```python threadObject.start()``` must be used to start the thread operation
 ```python
-Safety.start()        # To start watchdog thread class
+Safety.start()          # To start watchdog thread class
 BasicDatalogger.start() # To start BasicDatalogger thread class
 AhDatalogger.start()    # To start AhDatalogger thread class
 WhDatalogger.start()    # To start WhDatalogger thread class
